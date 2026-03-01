@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>多平台监控 - AI Agent World</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0f1115;
+            --bg-secondary: #161920;
+            --bg-card: #1c1f28;
+            --bg-hover: #232732;
+            --accent-primary: #3b82f6;
+            --accent-success: #10b981;
+            --accent-warning: #f59e0b;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --border-color: #2d3342;
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container { max-width: 1400px; margin: 0 auto; }
+        
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+        }
+        
+        .header-left h1 { font-size: 1.5em; font-weight: 600; margin-bottom: 5px; }
+        .header-left p { color: var(--text-secondary); font-size: 0.9em; }
+        
+        .back-btn {
+            padding: 10px 20px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.9em;
+            transition: all 0.2s;
+        }
+        .back-btn:hover { background: var(--bg-hover); color: var(--text-primary); }
+        
+        .platform-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+        
+        .platform-tab {
+            padding: 10px 20px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .platform-tab:hover { background: var(--bg-hover); }
+        .platform-tab.active { background: var(--accent-primary); color: white; border-color: var(--accent-primary); }
+        
+        .stats-bar {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 16px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .stat-value { font-size: 2em; font-weight: 700; color: var(--text-primary); }
+        .stat-label { font-size: 0.85em; color: var(--text-secondary); margin-top: 5px; }
+        
+        .content-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 20px;
+        }
+        
+        .content-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 20px;
+            transition: all 0.2s;
+        }
+        
+        .content-card:hover { border-color: var(--accent-primary); }
+        
+        .content-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+        }
+        
+        .platform-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 10px;
+            background: var(--bg-secondary);
+            border-radius: 6px;
+            font-size: 0.75em;
+        }
+        
+        .author-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+            padding: 10px;
+            background: var(--bg-secondary);
+            border-radius: 8px;
+        }
+        
+        .author-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: var(--bg-card);
+            object-fit: cover;
+        }
+        
+        .author-name {
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+        
+        .content-title {
+            font-size: 1.1em;
+            font-weight: 600;
+            margin-bottom: 10px;
+            line-height: 1.4;
+        }
+        
+        .content-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 8px 15px;
+            background: var(--accent-primary);
+            color: white;
+            border-radius: 6px;
+            text-decoration: none;
+            font-size: 0.85em;
+            margin: 10px 0;
+            transition: all 0.2s;
+        }
+        
+        .content-link:hover { background: #2563eb; }
+        
+        .content-meta {
+            display: flex;
+            gap: 15px;
+            font-size: 0.8em;
+            color: var(--text-muted);
+            margin-bottom: 15px;
+        }
+        
+        .stat-item { display: flex; align-items: center; gap: 5px; }
+        
+        .content-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 15px;
+        }
+        
+        .tag {
+            padding: 3px 8px;
+            background: var(--bg-secondary);
+            border-radius: 4px;
+            font-size: 0.7em;
+            color: var(--text-secondary);
+        }
+        
+        .loading { text-align: center; padding: 50px; color: var(--text-secondary); }
+        .empty-state { text-align: center; padding: 80px 20px; color: var(--text-secondary); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="header-left">
+                <h1>📱 多平台监控</h1>
+                <p>按平台筛选查看内容 · 每 10 分钟自动抓取</p>
+            </div>
+            <a href="/" class="back-btn">← 返回首页</a>
+        </header>
+        
+        <div class="platform-tabs" id="platform-tabs">
+            <div class="platform-tab active" data-platform="all">🌐 全部</div>
+            <div class="platform-tab" data-platform="xiaohongshu">📕 小红书</div>
+            <div class="platform-tab" data-platform="douyin">🎵 抖音</div>
+            <div class="platform-tab" data-platform="kuaishou">📹 快手</div>
+            <div class="platform-tab" data-platform="zhihu">📖 知乎</div>
+            <div class="platform-tab" data-platform="videonumber">📺 视频号</div>
+        </div>
+        
+        <div class="stats-bar">
+            <div class="stat-card">
+                <div class="stat-value" id="stat-total">0</div>
+                <div class="stat-label">总内容数</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="stat-xiaohongshu">0</div>
+                <div class="stat-label">小红书</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="stat-douyin">0</div>
+                <div class="stat-label">抖音</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="stat-kuaishou">0</div>
+                <div class="stat-label">快手</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="stat-zhihu">0</div>
+                <div class="stat-label">知乎</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="stat-videonumber">0</div>
+                <div class="stat-label">视频号</div>
+            </div>
+        </div>
+        
+        <div class="content-grid" id="content-grid">
+            <div class="loading">正在加载内容...</div>
+        </div>
+    </div>
+    
+    <script>
+        let currentPlatform = 'all';
+        
+        const platformIcons = {
+            xiaohongshu: '📕',
+            douyin: '🎵',
+            kuaishou: '📹',
+            zhihu: '📖',
+            videonumber: '📺'
+        };
+        
+        const platformNames = {
+            xiaohongshu: '小红书',
+            douyin: '抖音',
+            kuaishou: '快手',
+            zhihu: '知乎',
+            videonumber: '视频号'
+        };
+        
+        function switchPlatform(platform) {
+            currentPlatform = platform;
+            document.querySelectorAll('.platform-tab').forEach(tab => {
+                tab.classList.toggle('active', tab.dataset.platform === platform);
+            });
+            loadData();
+        }
+        
+        function loadData() {
+            fetch('/api/monitor-data?platform=' + currentPlatform)
+                .then(r => r.json())
+                .then(data => {
+                    renderStats(data.stats);
+                    renderContent(data.content);
+                })
+                .catch(err => {
+                    console.error(err);
+                    document.getElementById('content-grid').innerHTML = '<div class="loading">加载失败</div>';
+                });
+        }
+        
+        function renderStats(stats) {
+            document.getElementById('stat-total').textContent = stats.total || 0;
+            document.getElementById('stat-xiaohongshu').textContent = stats.xiaohongshu || 0;
+            document.getElementById('stat-douyin').textContent = stats.douyin || 0;
+            document.getElementById('stat-kuaishou').textContent = stats.kuaishou || 0;
+            document.getElementById('stat-zhihu').textContent = stats.zhihu || 0;
+            document.getElementById('stat-videonumber').textContent = stats.videonumber || 0;
+        }
+        
+        function renderContent(contentList) {
+            const grid = document.getElementById('content-grid');
+            
+            if (!contentList || contentList.length === 0) {
+                grid.innerHTML = '<div class="empty-state"><div style="font-size: 4em; margin-bottom: 20px;">📭</div><h3>暂无内容</h3><p>等待下次抓取</p></div>';
+                return;
+            }
+            
+            grid.innerHTML = contentList.map(item => `
+                <div class="content-card">
+                    <div class="content-header">
+                        <div class="platform-badge">
+                            <span>${platformIcons[item.platform] || '🌐'}</span>
+                            <span>${getPlatformName(item.platform)}</span>
+                        </div>
+                        <div style="font-size: 0.75em; color: var(--text-muted);">${formatTime(item.crawl_time)}</div>
+                    </div>
+                    ${item.author_avatar || item.author_url ? `
+                        <div class="author-info">
+                            ${item.author_avatar ? `<img src="${item.author_avatar}" class="author-avatar" alt="${item.author}">` : '<div class="author-avatar"></div>'}
+                            <span class="author-name">${item.author || '未知作者'}</span>
+                            ${item.author_url ? `<a href="${item.author_url}" target="_blank" style="margin-left: auto; color: var(--accent-primary); font-size: 0.8em;">查看主页 →</a>` : ''}
+                        </div>
+                    ` : ''}
+                    <div class="content-title">${item.title}</div>
+                    ${item.content_url ? `
+                        <a href="${item.content_url}" target="_blank" class="content-link">
+                            🔗 查看原文
+                        </a>
+                    ` : ''}
+                    <div class="content-meta">
+                        <div class="stat-item">👁️ ${formatNumber(item.views)}</div>
+                        <div class="stat-item">❤️ ${formatNumber(item.likes)}</div>
+                        <div class="stat-item">💬 ${formatNumber(item.comments)}</div>
+                        <div class="stat-item">🔄 ${formatNumber(item.shares)}</div>
+                    </div>
+                    ${item.tags ? `
+                        <div class="content-tags">
+                            ${item.tags.split(' ').map(tag => `<span class="tag">${tag}</span>`).join('')}
+                        </div>
+                    ` : ''}
+                </div>
+            `).join('');
+        }
+        
+        function getPlatformName(platform) {
+            const names = {
+                xiaohongshu: '小红书',
+                douyin: '抖音',
+                kuaishou: '快手',
+                zhihu: '知乎',
+                videonumber: '视频号'
+            };
+            return names[platform] || platform;
+        }
+        
+        function formatNumber(num) {
+            if (!num) return '0';
+            if (num >= 10000) return (num / 10000).toFixed(1) + 'w';
+            return num.toString();
+        }
+        
+        function formatTime(dateStr) {
+            const date = new Date(dateStr);
+            const now = new Date();
+            const diff = now - date;
+            
+            if (diff < 60000) return '刚刚';
+            if (diff < 3600000) return `${Math.floor(diff / 60000)}分钟前`;
+            if (diff < 86400000) return `${Math.floor(diff / 3600000)}小时前`;
+            return date.toLocaleString('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
+        }
+        
+        // 绑定平台切换事件
+        document.querySelectorAll('.platform-tab').forEach(tab => {
+            tab.addEventListener('click', () => switchPlatform(tab.dataset.platform));
+        });
+        
+        // 初始加载
+        loadData();
+        
+        // 每 10 分钟自动刷新
+        setInterval(loadData, 600000);
+    </script>
+</body>
+</html>

@@ -38,7 +38,11 @@ class APIHandler(SimpleHTTPRequestHandler):
             query = parse_qs(parsed.query)
             limit = int(query.get('limit', [10])[0])
             self.send_json(get_events(limit))
-        elif parsed.path == '/content.html':
+        elif parsed.path == '/api/monitor-data':
+            query = parse_qs(parsed.query)
+            platform = query.get('platform', ['all'])[0]
+            self.send_json(get_monitor_data(platform))
+        elif parsed.path == '/monitor-platforms.html':
             self.path = '/content.html'
             super().do_GET()
         elif parsed.path == '/monitor.html':
@@ -163,6 +167,42 @@ def get_events(limit=10):
     events = [dict(row) for row in cursor.fetchall()]
     conn.close()
     return {'events': events}
+
+def get_monitor_data(platform='all'):
+    """获取监控数据"""
+    conn = get_db()
+    cursor = conn.cursor()
+    
+    # 获取统计数据
+    if platform == 'all':
+        cursor.execute("SELECT platform, COUNT(*) as count FROM platform_monitor GROUP BY platform")
+    else:
+        cursor.execute("SELECT platform, COUNT(*) as count FROM platform_monitor WHERE platform = ? GROUP BY platform", (platform,))
+    
+    stats = {'total': 0}
+    for row in cursor.fetchall():
+        stats[row['platform']] = row['count']
+        stats['total'] += row['count']
+    
+    # 获取内容列表
+    if platform == 'all':
+        cursor.execute("""
+            SELECT * FROM platform_monitor 
+            ORDER BY crawl_time DESC 
+            LIMIT 50
+        """)
+    else:
+        cursor.execute("""
+            SELECT * FROM platform_monitor 
+            WHERE platform = ? 
+            ORDER BY crawl_time DESC 
+            LIMIT 50
+        """, (platform,))
+    
+    content = [dict(row) for row in cursor.fetchall()]
+    conn.close()
+    
+    return {'stats': stats, 'content': content}
 
 def trigger_task():
     """触发一个新任务（用于测试）"""
