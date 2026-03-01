@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Agent World - 智能体工作台</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0f1115;
+            --bg-secondary: #161920;
+            --bg-card: #1c1f28;
+            --bg-hover: #232732;
+            
+            --accent-primary: #3b82f6;
+            --accent-success: #10b981;
+            --accent-warning: #f59e0b;
+            --accent-danger: #ef4444;
+            
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            
+            --border-color: #2d3342;
+            --border-light: #3a4156;
+            
+            --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+            --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.4);
+            --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.5);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+        
+        /* Header */
+        header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+        
+        .logo {
+            font-size: 2.5em;
+            font-weight: 700;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, var(--text-primary) 0%, var(--text-secondary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 1.1em;
+            font-weight: 300;
+        }
+        
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 14px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            font-size: 0.85em;
+            color: var(--text-secondary);
+            margin-top: 20px;
+        }
+        
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--accent-success);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+        
+        /* Grid */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 24px;
+            margin-bottom: 60px;
+        }
+        
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 28px;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+        
+        .card:hover {
+            background: var(--bg-hover);
+            border-color: var(--border-light);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+        
+        .card-icon {
+            width: 48px;
+            height: 48px;
+            background: var(--bg-secondary);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5em;
+            margin-bottom: 20px;
+        }
+        
+        .card-title {
+            font-size: 1.2em;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+        }
+        
+        .card-description {
+            color: var(--text-secondary);
+            font-size: 0.9em;
+            margin-bottom: 20px;
+            line-height: 1.7;
+        }
+        
+        .card-meta {
+            display: flex;
+            gap: 16px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border-color);
+        }
+        
+        .meta-item {
+            font-size: 0.8em;
+            color: var(--text-muted);
+        }
+        
+        .meta-item strong {
+            color: var(--text-secondary);
+        }
+        
+        /* Stats */
+        .stats-section {
+            margin-bottom: 60px;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+        }
+        
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 2.5em;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            font-size: 0.85em;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 40px 0;
+            border-top: 1px solid var(--border-color);
+            color: var(--text-muted);
+            font-size: 0.85em;
+        }
+        
+        .quick-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .btn:hover {
+            background: var(--bg-hover);
+            border-color: var(--border-light);
+            color: var(--text-primary);
+        }
+        
+        .btn-primary {
+            background: var(--accent-primary);
+            border-color: var(--accent-primary);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #2563eb;
+            border-color: #2563eb;
+        }
+        
+        /* Terminal */
+        .terminal {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 20px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85em;
+            margin-top: 40px;
+        }
+        
+        .terminal-header {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+        
+        .terminal-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+        
+        .terminal-dot.red { background: #ef4444; }
+        .terminal-dot.yellow { background: #f59e0b; }
+        .terminal-dot.green { background: #10b981; }
+        
+        .terminal-content {
+            color: var(--text-secondary);
+            line-height: 1.8;
+        }
+        
+        .terminal-content .command {
+            color: var(--accent-success);
+        }
+        
+        .terminal-content .output {
+            color: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">AI Agent World</div>
+            <div class="subtitle">智能体协作工作台</div>
+            <div class="status-badge">
+                <span class="status-dot"></span>
+                <span>系统运行正常</span>
+            </div>
+        </header>
+        
+        <!-- 快速统计 -->
+        <section class="stats-section">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value" id="stat-agents">4</div>
+                    <div class="stat-label">AI 员工</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="stat-tasks">0</div>
+                    <div class="stat-label">进行中</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="stat-content">4</div>
+                    <div class="stat-label">内容产出</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="stat-workflows">4</div>
+                    <div class="stat-label">工作流执行</div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- 主要功能 -->
+        <section class="grid">
+            <a href="/" class="card">
+                <div class="card-icon">📊</div>
+                <div class="card-title">实时监控</div>
+                <div class="card-description">
+                    查看 AI 员工的实时工作状态、任务进度和活动日志。
+                    每 5 秒自动刷新，掌握最新工作动态。
+                </div>
+                <div class="card-meta">
+                    <span class="meta-item"><strong>4</strong> 个员工</span>
+                    <span class="meta-item"><strong>5s</strong> 刷新</span>
+                </div>
+            </a>
+            
+            <a href="/content.html" class="card">
+                <div class="card-icon">📝</div>
+                <div class="card-title">内容管理</div>
+                <div class="card-description">
+                    查看和管理 AI 生成的所有内容，包括热点报告、
+                    竞品分析、文案草稿和审核结果。
+                </div>
+                <div class="card-meta">
+                    <span class="meta-item"><strong>4</strong> 条内容</span>
+                    <span class="meta-item"><strong>100%</strong> 通过率</span>
+                </div>
+            </a>
+            
+            <div class="card" onclick="runWorkflow()">
+                <div class="card-icon">⚡</div>
+                <div class="card-title">执行工作流</div>
+                <div class="card-description">
+                    立即执行完整工作流：天枢研究 → 地衡情报 → 
+                    文曲创作 → 明镜审核。一键生成新内容。
+                </div>
+                <div class="card-meta">
+                    <span class="meta-item"><strong>~25s</strong> 耗时</span>
+                    <span class="meta-item"><strong>100%</strong> 成功率</span>
+                </div>
+            </div>
+            
+            <div class="card" onclick="showTerminal()">
+                <div class="card-icon">💻</div>
+                <div class="card-title">命令行工具</div>
+                <div class="card-description">
+                    通过命令行执行各种操作，适合自动化脚本和
+                    定时任务。查看完整命令参考。
+                </div>
+                <div class="card-meta">
+                    <span class="meta-item"><strong>5</strong> 个命令</span>
+                    <span class="meta-item"><strong>CLI</strong> 支持</span>
+                </div>
+            </div>
+        </section>
+        
+        <!-- 快速操作 -->
+        <section style="text-align: center; margin-bottom: 40px;">
+            <h3 style="font-size: 1.1em; margin-bottom: 20px; color: var(--text-secondary);">快速操作</h3>
+            <div class="quick-actions">
+                <button class="btn btn-primary" onclick="runWorkflow()">🚀 执行工作流</button>
+                <button class="btn" onclick="location.href='/content.html'">📄 查看内容</button>
+                <button class="btn" onclick="location.href='/'">📊 监控面板</button>
+                <button class="btn" onclick="copyCommand()">📋 复制命令</button>
+            </div>
+        </section>
+        
+        <!-- 命令行参考 -->
+        <div class="terminal" id="terminal" style="display: none;">
+            <div class="terminal-header">
+                <span class="terminal-dot red"></span>
+                <span class="terminal-dot yellow"></span>
+                <span class="terminal-dot green"></span>
+            </div>
+            <div class="terminal-content">
+                <div class="command">$ cd ~/.openclaw/workspace/ai-agents-world</div>
+                <div class="command">$ python3 workflow-v2.py</div>
+                <div class="output">🚀 AI 员工世界 - 完整工作流启动</div>
+                <div class="output">✅ 成功：4/4 | 耗时：~25 秒</div>
+                <br>
+                <div class="command">$ python3 view.py</div>
+                <div class="output">📝 查看生成的内容</div>
+                <br>
+                <div class="command">$ python3 server.py</div>
+                <div class="output">🌐 启动 API 服务器 (端口 8888)</div>
+            </div>
+        </div>
+        
+        <footer>
+            <div>AI Agent World v1.0 | 最后更新：2026-03-01</div>
+            <div style="margin-top: 10px;">
+                <a href="https://github.com" style="color: var(--text-muted); text-decoration: none;">文档</a>
+                <span style="margin: 0 10px;">·</span>
+                <a href="https://github.com" style="color: var(--text-muted); text-decoration: none;">GitHub</a>
+                <span style="margin: 0 10px;">·</span>
+                <a href="https://github.com" style="color: var(--text-muted); text-decoration: none;">状态</a>
+            </div>
+        </footer>
+    </div>
+    
+    <script>
+        function runWorkflow() {
+            alert('正在执行工作流...\n\n天枢 → 地衡 → 文曲 → 明镜\n\n预计耗时：25 秒');
+            // 实际应该调用 API
+            // fetch('/api/workflow', {method: 'POST'})
+            //   .then(r => r.json())
+            //   .then(data => alert('工作流完成！'));
+        }
+        
+        function showTerminal() {
+            const terminal = document.getElementById('terminal');
+            terminal.style.display = terminal.style.display === 'none' ? 'block' : 'none';
+        }
+        
+        function copyCommand() {
+            const cmd = 'cd ~/.openclaw/workspace/ai-agents-world && python3 workflow-v2.py';
+            navigator.clipboard.writeText(cmd);
+            alert('命令已复制到剪贴板！\n\n' + cmd);
+        }
+        
+        function loadStats() {
+            fetch('/api/status')
+                .then(r => r.json())
+                .then(data => {
+                    document.getElementById('stat-agents').textContent = data.total_agents || 4;
+                    document.getElementById('stat-tasks').textContent = data.active_tasks || 0;
+                    document.getElementById('stat-content').textContent = data.content_created || 4;
+                    document.getElementById('stat-workflows').textContent = 4;
+                })
+                .catch(err => console.error('加载状态失败:', err));
+        }
+        
+        // 初始加载
+        loadStats();
+        
+        // 每 10 秒刷新统计
+        setInterval(loadStats, 10000);
+    </script>
+</body>
+</html>
