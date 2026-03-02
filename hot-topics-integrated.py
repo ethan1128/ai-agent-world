@@ -28,8 +28,9 @@ def collect_all_hot_topics():
         result = subprocess.run(
             ['python3', 'baidu-hot-search.py'],
             cwd=os.path.dirname(__file__),
-            capture_output=True,
-            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            universal_newlines=True,
             timeout=30
         )
         print("✅ 百度热搜完成")
@@ -42,8 +43,9 @@ def collect_all_hot_topics():
         result = subprocess.run(
             ['python3', 'news-crawler.py'],
             cwd=os.path.dirname(__file__),
-            capture_output=True,
-            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            universal_newlines=True,
             timeout=30
         )
         print("✅ 新浪新闻完成")
