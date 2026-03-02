@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>任务详情</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0f1115;
+            --bg-secondary: #161920;
+            --bg-card: #1c1f28;
+            --accent-primary: #3b82f6;
+            --accent-success: #10b981;
+            --accent-warning: #f59e0b;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --border-color: #2d3342;
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container { max-width: 1200px; margin: 0 auto; }
+        
+        header {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+        }
+        
+        .header-title {
+            font-size: 1.5em;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+        
+        .back-btn {
+            display: inline-block;
+            padding: 8px 16px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.9em;
+            transition: all 0.2s;
+        }
+        
+        .back-btn:hover {
+            background: var(--bg-hover);
+            color: var(--text-primary);
+        }
+        
+        .task-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 30px;
+            margin-bottom: 20px;
+        }
+        
+        .task-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .task-title {
+            font-size: 1.5em;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+        
+        .task-meta {
+            display: flex;
+            gap: 20px;
+            font-size: 0.9em;
+            color: var(--text-secondary);
+        }
+        
+        .task-status {
+            padding: 6px 14px;
+            border-radius: 6px;
+            font-size: 0.85em;
+            font-weight: 500;
+        }
+        
+        .status-completed {
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--accent-success);
+        }
+        
+        .status-pending {
+            background: rgba(245, 158, 11, 0.15);
+            color: var(--accent-warning);
+        }
+        
+        .task-section {
+            margin-bottom: 25px;
+        }
+        
+        .section-title {
+            font-size: 1.1em;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: var(--accent-primary);
+        }
+        
+        .task-description {
+            line-height: 1.8;
+            color: var(--text-secondary);
+            white-space: pre-wrap;
+        }
+        
+        .task-timeline {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .timeline-item {
+            display: flex;
+            gap: 15px;
+            padding: 15px;
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            border-left: 3px solid var(--accent-primary);
+        }
+        
+        .timeline-time {
+            font-size: 0.85em;
+            color: var(--text-muted);
+            min-width: 150px;
+        }
+        
+        .timeline-content {
+            flex: 1;
+        }
+        
+        .timeline-from {
+            font-weight: 500;
+            color: var(--accent-primary);
+            margin-bottom: 5px;
+        }
+        
+        .timeline-message {
+            color: var(--text-secondary);
+            line-height: 1.6;
+            white-space: pre-wrap;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 50px;
+            color: var(--text-secondary);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="header-title">📋 任务详情</div>
+            <a href="/employee-dashboard.html" class="back-btn">← 返回仪表板</a>
+        </header>
+        
+        <div id="task-detail" class="task-card">
+            <div class="loading">加载任务详情...</div>
+        </div>
+        
+        <div id="task-timeline" class="task-card">
+            <div class="section-title">💬 任务交互记录</div>
+            <div class="task-timeline" id="timeline-list">
+                <div class="loading">加载交互记录...</div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // 从 URL 获取任务 ID
+        const urlParams = new URLSearchParams(window.location.search);
+        const taskId = urlParams.get('id');
+        
+        if (!taskId) {
+            document.getElementById('task-detail').innerHTML = '<div class="loading">❌ 未找到任务 ID</div>';
+        }
+        
+        // 加载任务详情
+        function loadTaskDetail() {
+            fetch(`/api/task/${taskId}`)
+                .then(r => r.json())
+                .then(task => {
+                    if (!task.id) {
+                        document.getElementById('task-detail').innerHTML = '<div class="loading">❌ 任务不存在</div>';
+                        return;
+                    }
+                    
+                    const statusClass = task.status === 'completed' ? 'status-completed' : 'status-pending';
+                    const statusText = task.status === 'completed' ? '✅ 已完成' : '⏳ 进行中';
+                    
+                    document.getElementById('task-detail').innerHTML = `
+                        <div class="task-header">
+                            <div>
+                                <div class="task-title">${task.title || '任务'}</div>
+                                <div class="task-meta">
+                                    <span>📊 来源：${task.source || '未知'}</span>
+                                    <span>🔥 优先级：P${task.priority || 1}</span>
+                                    <span>📅 创建：${formatDate(task.created_at)}</span>
+                                </div>
+                            </div>
+                            <div class="task-status ${statusClass}">${statusText}</div>
+                        </div>
+                        
+                        <div class="task-section">
+                            <div class="section-title">📝 任务描述</div>
+                            <div class="task-description">${task.description || '无描述'}</div>
+                        </div>
+                        
+                        ${task.assigned_to ? `
+                        <div class="task-section">
+                            <div class="section-title">👤 执行员工</div>
+                            <div class="task-description">${task.assigned_to}</div>
+                        </div>
+                        ` : ''}
+                    `;
+                })
+                .catch(err => {
+                    console.error(err);
+                    document.getElementById('task-detail').innerHTML = '<div class="loading">❌ 加载失败</div>';
+                });
+        }
+        
+        // 加载交互记录
+        function loadTimeline() {
+            fetch(`/api/interactions?limit=100`)
+                .then(r => r.json())
+                .then(data => {
+                    const list = document.getElementById('timeline-list');
+                    
+                    if (!data.interactions || data.interactions.length === 0) {
+                        list.innerHTML = '<div class="loading">暂无交互记录</div>';
+                        return;
+                    }
+                    
+                    list.innerHTML = data.interactions.map(int => `
+                        <div class="timeline-item">
+                            <div class="timeline-time">
+                                📅 ${formatDate(int.created_at)}
+                            </div>
+                            <div class="timeline-content">
+                                <div class="timeline-from">
+                                    ${int.from_name || int.from_employee} → ${int.to_name || int.to_employee}
+                                    <span style="margin-left: 10px; color: var(--text-muted);">[${int.task_type || '消息'}]</span>
+                                </div>
+                                <div class="timeline-message">${int.message}</div>
+                            </div>
+                        </div>
+                    `).join('');
+                })
+                .catch(err => {
+                    console.error(err);
+                    document.getElementById('timeline-list').innerHTML = '<div class="loading">❌ 加载失败</div>';
+                });
+        }
+        
+        function formatDate(dateStr) {
+            if (!dateStr) return '';
+            const date = new Date(dateStr);
+            const now = new Date();
+            const diff = now - date;
+            
+            // 显示完整日期时间
+            const datePart = date.toLocaleDateString('zh-CN', { 
+                month: '2-digit', 
+                day: '2-digit',
+                year: 'numeric'
+            });
+            const timePart = date.toLocaleTimeString('zh-CN', { 
+                hour: '2-digit', 
+                minute: '2-digit',
+                second: '2-digit'
+            });
+            
+            if (diff < 3600000) {
+                return `${datePart} ${timePart} (${Math.floor(diff / 60000)}分钟前)`;
+            } else if (diff < 86400000) {
+                return `${datePart} ${timePart} (${Math.floor(diff / 3600000)}小时前)`;
+            } else {
+                return `${datePart} ${timePart}`;
+            }
+        }
+        
+        // 初始加载
+        loadTaskDetail();
+        loadTimeline();
+    </script>
+</body>
+</html>

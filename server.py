@@ -119,3 +119,12 @@ if __name__ == '__main__':
     server = HTTPServer(('0.0.0.0', 8888), APIHandler)
     print("🚀 Server started on port 8888")
     server.serve_forever()
+
+# 任务详情 API
+def get_task_detail(task_id):
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute('SELECT * FROM tasks WHERE id = ?', (task_id,))
+    task = cursor.fetchone()
+    conn.close()
+    return dict(task) if task else {}
