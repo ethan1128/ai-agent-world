@@ -42,6 +42,9 @@ class APIHandler(SimpleHTTPRequestHandler):
             query = parse_qs(parsed.query)
             platform = query.get('platform', ['all'])[0]
             self.send_json(get_monitor_data(platform))
+        elif parsed.path == '/employee-dashboard.html':
+            self.path = '/employee-dashboard.html'
+            super().do_GET()
         elif parsed.path == '/monitor-platforms.html':
             self.path = '/content.html'
             super().do_GET()
@@ -290,3 +293,33 @@ if __name__ == '__main__':
     print(f"🤖 AI 员工：天枢 | 地衡 | 文曲 | 明镜")
     print(f"按 Ctrl+C 停止服务器")
     server.serve_forever()
+
+# 员工系统 API
+def get_employees():
+    """获取员工列表"""
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+    cursor.execute('SELECT * FROM employees')
+    employees = [dict(row) for row in cursor.fetchall()]
+    conn.close()
+    return {'employees': employees}
+
+def get_interactions(limit=50):
+    """获取交互记录"""
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+    cursor.execute('''
+        SELECT i.*, 
+               e1.name as from_name, e1.avatar as from_avatar,
+               e2.name as to_name, e2.avatar as to_avatar
+        FROM interactions i
+        LEFT JOIN employees e1 ON i.from_employee = e1.session_key
+        LEFT JOIN employees e2 ON i.to_employee = e2.session_key
+        ORDER BY i.created_at DESC
+        LIMIT ?
+    ''', (limit,))
+    interactions = [dict(row) for row in cursor.fetchall()]
+    conn.close()
+    return {'interactions': interactions}
