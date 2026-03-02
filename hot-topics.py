@@ -18,56 +18,38 @@ def get_db():
     return conn
 
 def collect_hot_topics():
-    """收集全网热点"""
+    """收集全网热点（使用真实搜索数据）"""
     print(f"🔥 [{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] 开始收集全网热点...")
     
-    # 从数据库获取最近的热点内容
-    conn = get_db()
-    cursor = conn.cursor()
-    
-    # 获取最近 2 小时的热点
-    cursor.execute("""
-        SELECT platform, title, author, views, likes, content_url, tags
-        FROM platform_monitor
-        WHERE crawl_time >= datetime('now', '-2 hours')
-        ORDER BY views DESC
-        LIMIT 20
-    """)
-    
-    hot_topics = cursor.fetchall()
-    conn.close()
-    
-    if not hot_topics:
-        print("⚠️  暂无热点数据")
+    # 使用 web_search 获取真实热点
+    try:
+        from openclaw_tools import web_search
+        
+        # 搜索今日热点
+        search_result = web_search(
+            query="2026 年 3 月 1 日 热搜榜 热门话题 今日头条",
+            count=10,
+            freshness="pd"  # 今天的内容
+        )
+        
+        hot_topics = []
+        for item in search_result.get('results', [])[:10]:
+            hot_topics.append({
+                'platform': 'web',
+                'title': item.get('title', ''),
+                'author': '网络热点',
+                'views': 0,
+                'likes': 0,
+                'url': item.get('url', ''),
+                'tags': '#今日热点'
+            })
+        
+        print(f"✅ 收集完成，共 {len(hot_topics)} 条热点")
+        return hot_topics
+        
+    except Exception as e:
+        print(f"⚠️  搜索失败：{e}")
         return None
-    
-    # 按平台分组统计
-    platform_stats = {}
-    for topic in hot_topics:
-        platform = topic['platform']
-        if platform not in platform_stats:
-            platform_stats[platform] = {
-                'count': 0,
-                'total_views': 0,
-                'topics': []
-            }
-        platform_stats[platform]['count'] += 1
-        platform_stats[platform]['total_views'] += topic['views']
-        platform_stats[platform]['topics'].append({
-            'title': topic['title'],
-            'author': topic['author'],
-            'views': topic['views'],
-            'likes': topic['likes'],
-            'url': topic['content_url'],
-            'tags': topic['tags']
-        })
-    
-    # 生成汇总报告
-    report = generate_report(platform_stats, len(hot_topics))
-    
-    print(f"✅ 收集完成，共 {len(hot_topics)} 条热点")
-    
-    return report
 
 def generate_report(platform_stats, total_count):
     """生成热点汇总报告"""
