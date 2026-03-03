@@ -133,9 +133,12 @@ def task_reviewer_work(task_description):
     return review, content_id
 
 def wenquxing_work(task_description):
-    """文曲星创作文案"""
+    """文曲星创作文案 - 基于热点标题生成"""
     print("✍️ 文曲星开始工作...")
     update_employee_status('文曲星', 'working')
+    
+    # 从热点标题提取关键词
+    keywords = task_description.split('"')[1] if '"' in task_description else "情感"
     
     cmd = [
         'openclaw', 'sessions', 'spawn',
@@ -149,8 +152,24 @@ def wenquxing_work(task_description):
         result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, timeout=150)
         content = result.stdout.strip()
         
+        # 如果 AI 创作失败，基于热点标题生成不同的文案
         if not content or len(content) < 50:
-            content = "人到中年，经历过风雨，也看透了人心。\n\n这三种人，一定要学会远离：\n\n1️⃣ 总是抱怨的人——负能量会传染\n2️⃣ 借钱不还的人——真心换不来珍惜\n3️⃣ 见不得你好的人——表面朋友最可怕\n\n余生不长，和舒服的人在一起，才是最好的养生。\n\n💬 你觉得呢？评论区聊聊\n\n#人到中年 #人生感悟 #情感语录"
+            content = f"""【关于{keywords}的感悟】
+
+{keywords}，这是每个人都无法回避的话题。
+
+人生路上，我们会遇到很多人，经历很多事。有些让我们成长，有些让我们成熟。
+
+💡 人生感悟：
+1. 珍惜眼前人，不要等到失去才后悔
+2. 保持好心态，凡事看开看淡
+3. 活出真自我，不要活在别人眼里
+
+🌈 愿我们都能活成自己喜欢的样子！
+
+💬 你对{keywords}有什么看法？评论区聊聊
+
+#{keywords} #人生感悟 #情感语录 #中年感悟"""
         
         content_id = create_content(
             title='情感文案',
