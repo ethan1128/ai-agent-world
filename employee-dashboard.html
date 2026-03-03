@@ -314,7 +314,15 @@
                     ).length;
                     document.getElementById('stat-tasks').textContent = pendingTasks;
                     
-                    // 统计已完成任务
+                    // 获取产出内容数量
+            fetch('/api/content')
+                .then(r => r.json())
+                .then(data => {
+                    document.getElementById('stat-content').textContent = data.content.length;
+                })
+                .catch(() => {});
+            
+            // 统计已完成任务
                     const completedTasks = allInteractions.filter(int => 
                         int.task_type === 'task_complete'
                     ).length;
