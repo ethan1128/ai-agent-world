@@ -248,11 +248,25 @@
         }
         
         function loadInteractions() {
-            fetch('/api/interactions?limit=50')
+            fetch('/api/interactions?limit=100')
                 .then(r => r.json())
                 .then(data => {
                     const list = document.getElementById('interaction-list');
+                    
+                    // 统计交互次数
                     document.getElementById('stat-interactions').textContent = data.interactions.length;
+                    
+                    // 统计进行中任务（task_assign 且未完成）
+                    const pendingTasks = data.interactions.filter(int => 
+                        int.task_type === 'task_assign' && int.status === 'pending'
+                    ).length;
+                    document.getElementById('stat-tasks').textContent = pendingTasks;
+                    
+                    // 统计已完成任务（task_complete）
+                    const completedTasks = data.interactions.filter(int => 
+                        int.task_type === 'task_complete'
+                    ).length;
+                    document.getElementById('stat-completed').textContent = completedTasks;
                     
                     if (!data.interactions || data.interactions.length === 0) {
                         list.innerHTML = '<div style="text-align: center; color: var(--text-secondary); padding: 20px;">暂无交互记录</div>';
