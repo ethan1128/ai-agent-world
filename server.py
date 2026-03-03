@@ -78,7 +78,8 @@ def get_interactions(limit=50):
     conn = get_db()
     cursor = conn.cursor()
     cursor.execute('''
-        SELECT i.*, 
+        SELECT i.id, i.from_employee, i.to_employee, i.message, i.task_type, 
+               i.status, i.result, i.created_at, i.completed_at, i.task_id,
                e1.name as from_name, e1.avatar as from_avatar,
                e2.name as to_name, e2.avatar as to_avatar
         FROM interactions i
@@ -87,7 +88,10 @@ def get_interactions(limit=50):
         ORDER BY i.created_at DESC
         LIMIT ?
     ''', (limit,))
-    interactions = [dict(row) for row in cursor.fetchall()]
+    interactions = []
+    for row in cursor.fetchall():
+        d = dict(row)
+        interactions.append(d)
     conn.close()
     return {'interactions': interactions}
 

@@ -274,7 +274,7 @@
                     }
                     
                     list.innerHTML = data.interactions.map(int => `
-                        <div class="interaction-item" onclick="window.location.href='/task-detail.html?id=${int.id}'">
+                        <div class="interaction-item" onclick="int.task_id ? window.location.href='/task-detail.html?id=${int.task_id}' : alert('该交互没有关联任务')">
                             <div class="interaction-header">
                                 <span class="interaction-from">${int.from_avatar || '👤'} ${int.from_name || int.from_employee}</span>
                                 <span class="interaction-arrow">→</span>
