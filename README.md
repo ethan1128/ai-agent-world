@@ -270,7 +270,7 @@ MIT License
 ## 📞 联系方式
 
 - **GitHub**: https://github.com/ethan1128/ai-agent-world
-- **邮箱**: ethan1128@example.com
+- **邮箱**: ai_flow@163.com
 - **文档**: https://github.com/ethan1128/ai-agent-world#readme
 
 ---
