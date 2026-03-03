@@ -43,6 +43,85 @@
         .header-title { font-size: 1.5em; font-weight: 600; margin-bottom: 5px; }
         .header-subtitle { color: var(--text-secondary); font-size: 0.9em; }
         
+        .calendar-header {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 20px;
+            margin-bottom: 30px;
+            padding: 25px;
+            background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-secondary) 100%);
+            border: 1px solid var(--border-color);
+            border-radius: 15px;
+        }
+        
+        .calendar-date-section {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .calendar-date {
+            font-size: 3em;
+            font-weight: 700;
+            color: var(--accent-primary);
+            line-height: 1;
+        }
+        
+        .calendar-weekday {
+            font-size: 1.2em;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+        
+        .calendar-time {
+            font-size: 1.5em;
+            font-weight: 600;
+            color: var(--text-primary);
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        .calendar-stats-section {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+        
+        .calendar-stat-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.2s;
+        }
+        
+        .calendar-stat-card:hover {
+            border-color: var(--accent-primary);
+            transform: translateY(-2px);
+        }
+        
+        .calendar-stat-value {
+            font-size: 2.5em;
+            font-weight: 700;
+            color: var(--accent-primary);
+            margin-bottom: 5px;
+        }
+        
+        .calendar-stat-label {
+            font-size: 0.85em;
+            color: var(--text-secondary);
+        }
+        
+        @media (max-width: 768px) {
+            .calendar-header {
+                grid-template-columns: 1fr;
+            }
+            .calendar-stats-section {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+        
         .stats-bar {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
@@ -448,12 +527,32 @@
         // 更新时间组件
         function updateTime() {
             const now = new Date();
+            
+            // 更新日期
+            const date = now.getDate();
+            document.getElementById('calendar-date').textContent = date;
+            
+            // 更新星期
+            const weekdays = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
+            const weekday = weekdays[now.getDay()];
+            document.getElementById('calendar-weekday').textContent = weekday;
+            
+            // 更新时间
             const timeStr = now.toLocaleTimeString('zh-CN', { 
                 hour: '2-digit', 
                 minute: '2-digit', 
                 second: '2-digit' 
             });
-            document.getElementById('current-time').textContent = timeStr;
+            document.getElementById('calendar-time').textContent = timeStr;
+        }
+        
+        // 更新访问次数
+        function updateVisitCount() {
+            const storageKey = 'dashboard-visit-count';
+            let count = parseInt(localStorage.getItem(storageKey) || '0');
+            count++;
+            localStorage.setItem(storageKey, count.toString());
+            document.getElementById('stat-visit').textContent = count;
         }
         
         // 更新访问次数
