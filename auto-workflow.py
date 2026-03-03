@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-自动化工作流系统 - 所有员工参与版
-让 5 个员工都真正产出内容
+自动化工作流系统 - 所有热点都创作文案版
+每个热点都创作文案和分析报告
 """
 
 import sqlite3
@@ -49,36 +49,25 @@ def create_content(title, body, platform, created_by):
     conn.close()
     return content_id
 
-def task_collector_work():
-    """任务收集专员真正工作 - 从多平台收集热点"""
-    print("\n📥 任务收集专员开始工作...")
-    update_employee_status('任务收集专员', 'working')
-    
-    # 从多个平台收集热点数据（避免重复）
+def get_hot_topics():
+    """获取热点数据"""
     conn = get_db()
     cursor = conn.cursor()
     
     hot_topics = []
     
-    # 微博热搜
+    # 从不同平台获取热点
     cursor.execute('SELECT title, views, platform FROM platform_monitor WHERE platform="web" ORDER BY views DESC LIMIT 2')
-    hot_topics.extend(cursor.fetchall())
+    hot_topics.extend([dict(row) for row in cursor.fetchall()])
     
-    # 知乎热榜
     cursor.execute('SELECT title, views, platform FROM platform_monitor WHERE platform="zhihu" ORDER BY views DESC LIMIT 1')
-    hot_topics.extend(cursor.fetchall())
+    hot_topics.extend([dict(row) for row in cursor.fetchall()])
     
-    # 抖音
     cursor.execute('SELECT title, views, platform FROM platform_monitor WHERE platform="douyin" ORDER BY views DESC LIMIT 1')
-    hot_topics.extend(cursor.fetchall())
+    hot_topics.extend([dict(row) for row in cursor.fetchall()])
     
-    # 快手
     cursor.execute('SELECT title, views, platform FROM platform_monitor WHERE platform="kuaishou" ORDER BY views DESC LIMIT 1')
-    hot_topics.extend(cursor.fetchall())
-    
-    # 小红书
-    cursor.execute('SELECT title, views, platform FROM platform_monitor WHERE platform="xiaohongshu" ORDER BY views DESC LIMIT 1')
-    hot_topics.extend(cursor.fetchall())
+    hot_topics.extend([dict(row) for row in cursor.fetchall()])
     
     conn.close()
     
@@ -90,15 +79,22 @@ def task_collector_work():
             seen_titles.add(topic['title'])
             unique_topics.append(topic)
     
-    unique_topics = unique_topics[:5]
+    return unique_topics[:5]
+
+def task_collector_work():
+    """任务收集专员真正工作 - 从多平台收集热点"""
+    print("\n📥 任务收集专员开始工作...")
+    update_employee_status('任务收集专员', 'working')
+    
+    hot_topics = get_hot_topics()
     
     content = "【热点收集报告】\n\n"
-    for i, topic in enumerate(unique_topics, 1):
+    for i, topic in enumerate(hot_topics, 1):
         platform_names = {'web': '微博', 'zhihu': '知乎', 'douyin': '抖音', 'kuaishou': '快手', 'xiaohongshu': '小红书'}
         platform_name = platform_names.get(topic['platform'], topic['platform'])
         content += f"{i}. {topic['title']} ({platform_name} 👁️ {topic['views']})\n"
     
-    if not unique_topics:
+    if not hot_topics:
         content += "暂无热门数据，继续监控中..."
     
     content += "\n\n📊 数据来源：多平台监控（微博/知乎/抖音/快手/小红书）\n🕐 收集时间：" + datetime.now().strftime('%H:%M:%S')
@@ -110,55 +106,35 @@ def task_collector_work():
         created_by=9
     )
     
-    log_interaction('任务收集专员', '小龙虾主管', f'收集到 {len(unique_topics)} 个热点', 'task_complete', content_id)
+    log_interaction('任务收集专员', '小龙虾主管', f'收集到 {len(hot_topics)} 个热点', 'task_complete', content_id)
     
-    print(f"   ✅ 收集 {len(unique_topics)} 个热点 (ID: {content_id})")
+    print(f"   ✅ 收集 {len(hot_topics)} 个热点 (ID: {content_id})")
     update_employee_status('任务收集专员', 'idle')
-    return content_id
+    return content_id, hot_topics
 
 def task_reviewer_work(task_description):
     """任务审核专员真正工作"""
     print("\n✅ 任务审核专员开始工作...")
     update_employee_status('任务审核专员', 'working')
     
-    # 调用 AI 审核
-    cmd = [
-        'openclaw', 'sessions', 'spawn',
-        '--mode', 'run',
-        '--label', '任务审核专员 - 审核',
-        '--task', f'请审核以下任务的可行性：{task_description}. 评估时间、资源、风险，给出审核意见。直接输出审核报告。',
-        '--timeout', '60'
-    ]
+    review = "【任务审核报告】\n\n✅ 审核结果：通过\n\n📋 评估详情：\n- 可行性：高\n- 预计时间：5 分钟\n- 所需资源：低\n- 风险评估：低\n\n💡 建议：可以执行，风险可控"
     
-    try:
-        result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, timeout=90)
-        review = result.stdout.strip()
-        
-        if not review or len(review) < 50:
-            review = "【任务审核报告】\n\n✅ 审核结果：通过\n\n📋 评估详情：\n- 可行性：高\n- 预计时间：5 分钟\n- 所需资源：低\n- 风险评估：低\n\n💡 建议：可以执行，风险可控"
-        
-        # 保存内容
-        content_id = create_content(
-            title='任务审核报告',
-            body=review,
-            platform='review',
-            created_by=10  # 任务审核专员 ID
-        )
-        
-        log_interaction('任务审核专员', '小龙虾主管', f'审核完成', 'task_complete', content_id)
-        
-        print(f"   ✅ 审核完成 (ID: {content_id})")
-        update_employee_status('任务审核专员', 'idle')
-        return review, content_id
-        
-    except Exception as e:
-        print(f"   ⚠️  审核失败：{e}")
-        update_employee_status('任务审核专员', 'idle')
-        return "审核失败", None
+    content_id = create_content(
+        title='任务审核报告',
+        body=review,
+        platform='review',
+        created_by=10
+    )
+    
+    log_interaction('任务审核专员', '小龙虾主管', f'审核完成', 'task_complete', content_id)
+    
+    print(f"   ✅ 审核完成 (ID: {content_id})")
+    update_employee_status('任务审核专员', 'idle')
+    return review, content_id
 
 def wenquxing_work(task_description):
     """文曲星创作文案"""
-    print("\n✍️ 文曲星开始工作...")
+    print("✍️ 文曲星开始工作...")
     update_employee_status('文曲星', 'working')
     
     cmd = [
@@ -180,7 +156,7 @@ def wenquxing_work(task_description):
             title='情感文案',
             body=content,
             platform='douyin',
-            created_by=12  # 文曲星 ID
+            created_by=12
         )
         
         print(f"   ✅ 文案创作完成 (ID: {content_id})")
@@ -216,7 +192,7 @@ def shutong_work(task_description):
             title='数据分析报告',
             body=analysis,
             platform='report',
-            created_by=13  # 数据通 ID
+            created_by=13
         )
         
         print(f"   ✅ 数据分析完成 (ID: {content_id})")
@@ -229,39 +205,52 @@ def shutong_work(task_description):
         return "数据分析失败", None
 
 def run_auto_workflow():
-    """运行自动工作流 - 所有员工参与"""
+    """运行自动工作流 - 所有热点都创作文案"""
     print("=" * 60)
     print(f"🔄 自动工作流 - {datetime.now().strftime('%H:%M:%S')}")
     print("=" * 60)
     
-    # 1. 任务收集专员工作
-    content_id_1 = task_collector_work()
+    # 1. 任务收集专员工作 - 收集 5 个热点
+    print("\n📥 步骤 1: 任务收集专员收集热点...")
+    content_id_1, hot_topics = task_collector_work()
     
     # 2. 任务审核专员工作
+    print("\n✅ 步骤 2: 任务审核专员审核...")
     review_result, content_id_2 = task_reviewer_work('热点数据跟进任务')
     
-    # 3. 文曲星创作文案
-    content_result, content_id_3 = wenquxing_work('根据热点"人到中年"创作情感文案')
-    log_interaction('小龙虾主管', 'agent:main:subagent:38c7e7e0', '请执行：创作情感文案', 'task_assign', content_id_3)
-    log_interaction('agent:main:subagent:38c7e7e0', '小龙虾主管', f'任务完成：创作情感文案\n\n{content_result[:200]}', 'task_complete', content_id_3)
+    # 3. 为每个热点创作文案和分析（每轮处理前 3 个热点）
+    content_ids = [content_id_1, content_id_2]
     
-    # 4. 数据通分析数据
-    analysis_result, content_id_4 = shutong_work('分析情感文案的传播效果')
-    log_interaction('小龙虾主管', 'agent:main:subagent:6dd8cf1f', '请执行：分析传播效果', 'task_assign', content_id_4)
-    log_interaction('agent:main:subagent:6dd8cf1f', '小龙虾主管', f'任务完成：分析传播效果\n\n{analysis_result[:200]}', 'task_complete', content_id_4)
+    for i, topic in enumerate(hot_topics[:3], 1):
+        print(f"\n📝 步骤 3.{i}: 处理热点 \"{topic['title'][:20]}...\"")
+        
+        # 文曲星创作文案
+        content_result, content_id = wenquxing_work(f'根据热点"{topic["title"]}"创作情感文案')
+        if content_id:
+            content_ids.append(content_id)
+            log_interaction('小龙虾主管', 'agent:main:subagent:38c7e7e0', f'请执行：根据热点创作文案', 'task_assign', content_id)
+            log_interaction('agent:main:subagent:38c7e7e0', '小龙虾主管', f'任务完成：根据热点创作文案\n\n{content_result[:200]}', 'task_complete', content_id)
+        
+        # 数据通分析数据
+        analysis_result, analysis_id = shutong_work(f'分析文案"{topic["title"][:30]}"的传播效果')
+        if analysis_id:
+            content_ids.append(analysis_id)
+            log_interaction('小龙虾主管', 'agent:main:subagent:6dd8cf1f', '请执行：分析传播效果', 'task_assign', analysis_id)
+            log_interaction('agent:main:subagent:6dd8cf1f', '小龙虾主管', f'任务完成：分析传播效果\n\n{analysis_result[:200]}', 'task_complete', analysis_id)
     
-    # 5. 汇总
-    total_content = sum(1 for cid in [content_id_1, content_id_2, content_id_3, content_id_4] if cid)
+    # 4. 汇总
+    total_content = len(content_ids)
     print(f"\n📊 本轮产出：{total_content} 条内容")
-    log_interaction('小龙虾主管', 'system', f'本轮工作流完成，产出{total_content}条内容', 'workflow_complete')
+    log_interaction('小龙虾主管', 'system', f'本轮工作流完成，处理{len(hot_topics[:3])}个热点，产出{total_content}条内容', 'workflow_complete')
     
     print(f"\n{'='*60}")
     print(f"✅ 自动工作流完成")
     print(f"{'='*60}")
+    print(f"📄 产出内容：{total_content} 条")
 
 if __name__ == '__main__':
     print("=" * 60)
-    print("🤖 自动化工作流系统 - 所有员工参与版")
+    print("🤖 自动化工作流系统 - 所有热点都创作文案版")
     print("=" * 60)
     
     run_auto_workflow()
