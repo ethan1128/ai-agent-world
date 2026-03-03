@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>产出内容</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0f1115;
+            --bg-secondary: #161920;
+            --bg-card: #1c1f28;
+            --bg-hover: #232732;
+            --accent-primary: #3b82f6;
+            --accent-success: #10b981;
+            --accent-warning: #f59e0b;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --border-color: #2d3342;
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container { max-width: 1400px; margin: 0 auto; }
+        
+        header {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+        }
+        
+        .header-title { font-size: 1.5em; font-weight: 600; margin-bottom: 10px; }
+        .header-subtitle { color: var(--text-secondary); font-size: 0.9em; }
+        
+        .back-btn {
+            display: inline-block;
+            padding: 8px 16px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.9em;
+            transition: all 0.2s;
+            margin-top: 10px;
+        }
+        
+        .back-btn:hover { background: var(--bg-hover); color: var(--text-primary); }
+        
+        .content-list {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .content-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 25px;
+            transition: all 0.2s;
+        }
+        
+        .content-card:hover {
+            border-color: var(--accent-primary);
+        }
+        
+        .content-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .content-title {
+            font-size: 1.3em;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        
+        .content-meta {
+            display: flex;
+            gap: 20px;
+            font-size: 0.85em;
+            color: var(--text-secondary);
+        }
+        
+        .content-status {
+            padding: 6px 14px;
+            border-radius: 6px;
+            font-size: 0.85em;
+            font-weight: 500;
+        }
+        
+        .status-draft { background: rgba(245, 158, 11, 0.15); color: var(--accent-warning); }
+        .status-published { background: rgba(16, 185, 129, 0.15); color: var(--accent-success); }
+        
+        .task-info {
+            background: var(--bg-secondary);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+        
+        .task-info-title {
+            font-size: 0.9em;
+            font-weight: 600;
+            color: var(--accent-primary);
+            margin-bottom: 10px;
+        }
+        
+        .task-info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        
+        .task-info-item {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        
+        .task-info-label {
+            font-size: 0.75em;
+            color: var(--text-muted);
+        }
+        
+        .task-info-value {
+            font-size: 0.9em;
+            color: var(--text-secondary);
+        }
+        
+        .content-body {
+            background: var(--bg-secondary);
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 3px solid var(--accent-primary);
+            line-height: 1.8;
+            color: var(--text-secondary);
+            white-space: pre-wrap;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .loading { text-align: center; padding: 50px; color: var(--text-secondary); }
+        .empty { text-align: center; padding: 80px 20px; color: var(--text-secondary); }
+        .empty-icon { font-size: 4em; margin-bottom: 20px; opacity: 0.3; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="header-title">📄 产出内容</div>
+            <div class="header-subtitle">查看 AI 员工创作的所有内容</div>
+            <a href="/employee-dashboard.html" class="back-btn">← 返回仪表板</a>
+        </header>
+        
+        <div id="content-list" class="content-list">
+            <div class="loading">加载内容...</div>
+        </div>
+    </div>
+    
+    <script>
+        function loadContent() {
+            fetch('/api/content')
+                .then(r => r.json())
+                .then(data => {
+                    const list = document.getElementById('content-list');
+                    
+                    if (!data.content || data.content.length === 0) {
+                        list.innerHTML = `
+                            <div class="empty">
+                                <div class="empty-icon">📄</div>
+                                <h3>暂无产出内容</h3>
+                                <p>等待 AI 员工创作文案...</p>
+                            </div>
+                        `;
+                        return;
+                    }
+                    
+                    list.innerHTML = data.content.map(item => `
+                        <div class="content-card">
+                            <div class="content-header">
+                                <div>
+                                    <div class="content-title">${escapeHtml(item.title || '无标题')}</div>
+                                    <div class="content-meta">
+                                        <span>📅 ${formatDate(item.created_at)}</span>
+                                        <span>📊 平台：${item.platform || '未知'}</span>
+                                        <span>👁️ ${item.metrics_views || 0}</span>
+                                    </div>
+                                </div>
+                                <div class="content-status status-${item.status || 'draft'}">
+                                    ${item.status === 'published' ? '✅ 已发布' : '📝 草稿'}
+                                </div>
+                            </div>
+                            
+                            ${item.created_by ? `
+                            <div class="task-info">
+                                <div class="task-info-title">📋 任务分配信息</div>
+                                <div class="task-info-grid">
+                                    <div class="task-info-item">
+                                        <span class="task-info-label">创建员工 ID</span>
+                                        <span class="task-info-value">${item.created_by}</span>
+                                    </div>
+                                    <div class="task-info-item">
+                                        <span class="task-info-label">状态</span>
+                                        <span class="task-info-value">${item.status || '草稿'}</span>
+                                    </div>
+                                    <div class="task-info-item">
+                                        <span class="task-info-label">创建时间</span>
+                                        <span class="task-info-value">${formatDate(item.created_at)}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            ` : ''}
+                            
+                            <div class="content-body">${escapeHtml(item.body || '无内容')}</div>
+                        </div>
+                    `).join('');
+                })
+                .catch(err => {
+                    console.error(err);
+                    document.getElementById('content-list').innerHTML = '<div class="empty">❌ 加载失败</div>';
+                });
+        }
+        
+        function formatDate(dateStr) {
+            if (!dateStr) return '';
+            const date = new Date(dateStr);
+            return date.toLocaleString('zh-CN', {
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+        
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        // 初始加载
+        loadContent();
+    </script>
+</body>
+</html>
