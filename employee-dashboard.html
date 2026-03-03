@@ -47,9 +47,9 @@
         .header-subtitle { color: var(--text-secondary); font-size: 0.9em; }
         
         .calendar-header {
-            display: grid;
-            grid-template-columns: 1fr 2fr;
-            gap: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             margin-bottom: 30px;
             padding: 25px;
             background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-secondary) 100%);
@@ -60,7 +60,6 @@
         .calendar-date-section {
             display: flex;
             flex-direction: column;
-            justify-content: center;
             gap: 8px;
         }
         
@@ -84,44 +83,35 @@
             font-family: 'JetBrains Mono', monospace;
         }
         
-        .calendar-stats-section {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 15px;
-        }
-        
-        .calendar-stat-card {
+        .calendar-visit-section {
+            text-align: right;
+            padding: 20px;
             background: var(--bg-secondary);
             border: 1px solid var(--border-color);
             border-radius: 10px;
-            padding: 20px;
-            text-align: center;
-            transition: all 0.2s;
+            min-width: 200px;
         }
         
-        .calendar-stat-card:hover {
-            border-color: var(--accent-primary);
-            transform: translateY(-2px);
+        .calendar-visit-label {
+            font-size: 0.85em;
+            color: var(--text-secondary);
+            margin-bottom: 10px;
         }
         
-        .calendar-stat-value {
+        .calendar-visit-value {
             font-size: 2.5em;
             font-weight: 700;
             color: var(--accent-primary);
-            margin-bottom: 5px;
-        }
-        
-        .calendar-stat-label {
-            font-size: 0.85em;
-            color: var(--text-secondary);
         }
         
         @media (max-width: 768px) {
             .calendar-header {
-                grid-template-columns: 1fr;
+                flex-direction: column;
+                gap: 20px;
+                text-align: center;
             }
-            .calendar-stats-section {
-                grid-template-columns: repeat(3, 1fr);
+            .calendar-visit-section {
+                text-align: center;
             }
         }
         
@@ -297,19 +287,9 @@
                 <div class="calendar-weekday" id="calendar-weekday">------</div>
                 <div class="calendar-time" id="calendar-time">--:--:--</div>
             </div>
-            <div class="calendar-stats-section">
-                <div class="calendar-stat-card">
-                    <div class="calendar-stat-value" id="stat-visit">0</div>
-                    <div class="calendar-stat-label">👁️ 访问次数</div>
-                </div>
-                <div class="calendar-stat-card">
-                    <div class="calendar-stat-value" id="stat-employees">0</div>
-                    <div class="calendar-stat-label">👥 员工数</div>
-                </div>
-                <div class="calendar-stat-card">
-                    <div class="calendar-stat-value" id="stat-interactions">0</div>
-                    <div class="calendar-stat-label">💬 交互数</div>
-                </div>
+            <div class="calendar-visit-section">
+                <div class="calendar-visit-label">👁️ 访问次数</div>
+                <div class="calendar-visit-value" id="stat-visit">0</div>
             </div>
         </div>
         
