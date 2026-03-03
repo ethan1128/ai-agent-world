@@ -50,37 +50,69 @@ def create_content(title, body, platform, created_by):
     return content_id
 
 def task_collector_work():
-    """任务收集专员真正工作"""
+    """任务收集专员真正工作 - 从多平台收集热点"""
     print("\n📥 任务收集专员开始工作...")
     update_employee_status('任务收集专员', 'working')
     
-    # 收集热点数据
+    # 从多个平台收集热点数据（避免重复）
     conn = get_db()
     cursor = conn.cursor()
-    cursor.execute('SELECT title, views FROM platform_monitor WHERE views > 50000 ORDER BY views DESC LIMIT 3')
-    hot_topics = cursor.fetchall()
+    
+    hot_topics = []
+    
+    # 微博热搜
+    cursor.execute('SELECT title, views, platform FROM platform_monitor WHERE platform="web" ORDER BY views DESC LIMIT 2')
+    hot_topics.extend(cursor.fetchall())
+    
+    # 知乎热榜
+    cursor.execute('SELECT title, views, platform FROM platform_monitor WHERE platform="zhihu" ORDER BY views DESC LIMIT 1')
+    hot_topics.extend(cursor.fetchall())
+    
+    # 抖音
+    cursor.execute('SELECT title, views, platform FROM platform_monitor WHERE platform="douyin" ORDER BY views DESC LIMIT 1')
+    hot_topics.extend(cursor.fetchall())
+    
+    # 快手
+    cursor.execute('SELECT title, views, platform FROM platform_monitor WHERE platform="kuaishou" ORDER BY views DESC LIMIT 1')
+    hot_topics.extend(cursor.fetchall())
+    
+    # 小红书
+    cursor.execute('SELECT title, views, platform FROM platform_monitor WHERE platform="xiaohongshu" ORDER BY views DESC LIMIT 1')
+    hot_topics.extend(cursor.fetchall())
+    
     conn.close()
     
-    content = "【热点收集报告】\n\n"
-    for i, topic in enumerate(hot_topics, 1):
-        content += f"{i}. {topic['title']} (👁️ {topic['views']})\n"
+    # 去重
+    seen_titles = set()
+    unique_topics = []
+    for topic in hot_topics:
+        if topic['title'] not in seen_titles:
+            seen_titles.add(topic['title'])
+            unique_topics.append(topic)
     
-    if not hot_topics:
+    unique_topics = unique_topics[:5]
+    
+    content = "【热点收集报告】\n\n"
+    for i, topic in enumerate(unique_topics, 1):
+        platform_names = {'web': '微博', 'zhihu': '知乎', 'douyin': '抖音', 'kuaishou': '快手', 'xiaohongshu': '小红书'}
+        platform_name = platform_names.get(topic['platform'], topic['platform'])
+        content += f"{i}. {topic['title']} ({platform_name} 👁️ {topic['views']})\n"
+    
+    if not unique_topics:
         content += "暂无热门数据，继续监控中..."
     
-    content += "\n\n📊 数据来源：多平台监控\n🕐 收集时间：" + datetime.now().strftime('%H:%M:%S')
+    content += "\n\n📊 数据来源：多平台监控（微博/知乎/抖音/快手/小红书）\n🕐 收集时间：" + datetime.now().strftime('%H:%M:%S')
     
-    # 保存内容
     content_id = create_content(
         title='热点收集报告',
         body=content,
         platform='report',
-        created_by=9  # 任务收集专员 ID
+        created_by=9
     )
     
-    log_interaction('任务收集专员', '小龙虾主管', f'收集到 {len(hot_topics)} 个热点', 'task_complete', content_id)
+    log_interaction('任务收集专员', '小龙虾主管', f'收集到 {len(unique_topics)} 个热点', 'task_complete', content_id)
     
-    print(f"   ✅ 收集 {len(hot_topics)} 个热点 (ID: {content_id})")
+    print(f"   ✅ 收集 {len(unique_topics)} 个热点 (ID: {content_id})")
     update_employee_status('任务收集专员', 'idle')
     return content_id
 
