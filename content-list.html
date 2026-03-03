@@ -58,9 +58,106 @@
         
         .back-btn:hover { background: var(--bg-hover); color: var(--text-primary); }
         
-        .content-list {
+        .filter-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+        }
+        
+        .filter-title {
+            font-size: 1em;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: var(--accent-primary);
+        }
+        
+        .filter-buttons {
             display: flex;
-            flex-direction: column;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .filter-btn {
+            padding: 8px 16px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 0.85em;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .filter-btn:hover {
+            background: var(--bg-hover);
+            border-color: var(--accent-primary);
+        }
+        
+        .filter-btn.active {
+            background: var(--accent-primary);
+            color: white;
+            border-color: var(--accent-primary);
+        }
+        
+        .filter-count {
+            background: rgba(255,255,255,0.2);
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.8em;
+        }
+        
+        .stats-bar {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .stat-value { font-size: 2em; font-weight: 700; color: var(--accent-primary); }
+        .stat-label { font-size: 0.85em; color: var(--text-secondary); margin-top: 5px; }
+        
+        .employee-section {
+            margin-bottom: 40px;
+        }
+        
+        .employee-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid var(--border-color);
+        }
+        
+        .employee-avatar { font-size: 2.5em; }
+        .employee-name { font-size: 1.3em; font-weight: 600; }
+        .employee-role { font-size: 0.9em; color: var(--text-secondary); margin-left: 10px; }
+        .employee-count { 
+            margin-left: auto;
+            padding: 6px 14px;
+            background: var(--accent-primary);
+            color: white;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 500;
+        }
+        
+        .content-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
             gap: 20px;
         }
         
@@ -68,92 +165,51 @@
             background: var(--bg-card);
             border: 1px solid var(--border-color);
             border-radius: 10px;
-            padding: 25px;
+            padding: 20px;
             transition: all 0.2s;
         }
         
         .content-card:hover {
             border-color: var(--accent-primary);
-        }
-        
-        .content-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 20px;
-            padding-bottom: 15px;
-            border-bottom: 1px solid var(--border-color);
+            transform: translateY(-2px);
         }
         
         .content-title {
-            font-size: 1.3em;
+            font-size: 1.1em;
             font-weight: 600;
-            margin-bottom: 8px;
+            margin-bottom: 10px;
+            line-height: 1.4;
         }
         
         .content-meta {
             display: flex;
-            gap: 20px;
-            font-size: 0.85em;
+            gap: 15px;
+            font-size: 0.8em;
             color: var(--text-secondary);
+            margin-bottom: 15px;
+            flex-wrap: wrap;
         }
         
         .content-status {
-            padding: 6px 14px;
-            border-radius: 6px;
-            font-size: 0.85em;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 0.75em;
             font-weight: 500;
         }
         
         .status-draft { background: rgba(245, 158, 11, 0.15); color: var(--accent-warning); }
         .status-published { background: rgba(16, 185, 129, 0.15); color: var(--accent-success); }
         
-        .task-info {
+        .content-preview {
             background: var(--bg-secondary);
             padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 15px;
-        }
-        
-        .task-info-title {
-            font-size: 0.9em;
-            font-weight: 600;
-            color: var(--accent-primary);
-            margin-bottom: 10px;
-        }
-        
-        .task-info-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-        }
-        
-        .task-info-item {
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-        }
-        
-        .task-info-label {
-            font-size: 0.75em;
-            color: var(--text-muted);
-        }
-        
-        .task-info-value {
-            font-size: 0.9em;
+            border-radius: 6px;
+            font-size: 0.85em;
             color: var(--text-secondary);
-        }
-        
-        .content-body {
-            background: var(--bg-secondary);
-            padding: 20px;
-            border-radius: 8px;
-            border-left: 3px solid var(--accent-primary);
-            line-height: 1.8;
-            color: var(--text-secondary);
-            white-space: pre-wrap;
-            max-height: 400px;
+            line-height: 1.6;
+            max-height: 150px;
             overflow-y: auto;
+            white-space: pre-wrap;
         }
         
         .loading { text-align: center; padding: 50px; color: var(--text-secondary); }
@@ -169,73 +225,213 @@
             <a href="/employee-dashboard.html" class="back-btn">← 返回仪表板</a>
         </header>
         
-        <div id="content-list" class="content-list">
+        <div class="stats-bar">
+            <div class="stat-card">
+                <div class="stat-value" id="stat-total">0</div>
+                <div class="stat-label">📄 总内容</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="stat-employees">0</div>
+                <div class="stat-label">👥 员工数</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="stat-published">0</div>
+                <div class="stat-label">✅ 已发布</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="stat-draft">0</div>
+                <div class="stat-label">📝 草稿</div>
+            </div>
+        </div>
+        
+        <div class="filter-section">
+            <div class="filter-title">🔍 按员工筛选</div>
+            <div class="filter-buttons" id="filter-buttons">
+                <button class="filter-btn active" data-employee="all">
+                    📄 全部 <span class="filter-count" id="count-all">0</span>
+                </button>
+            </div>
+        </div>
+        
+        <div id="content-container">
             <div class="loading">加载内容...</div>
         </div>
     </div>
     
     <script>
+        let allContent = [];
+        let employees = {};
+        let currentFilter = 'all';
+        
         function loadContent() {
-            fetch('/api/content')
-                .then(r => r.json())
-                .then(data => {
-                    const list = document.getElementById('content-list');
-                    
-                    if (!data.content || data.content.length === 0) {
-                        list.innerHTML = `
-                            <div class="empty">
-                                <div class="empty-icon">📄</div>
-                                <h3>暂无产出内容</h3>
-                                <p>等待 AI 员工创作文案...</p>
-                            </div>
-                        `;
-                        return;
-                    }
-                    
-                    list.innerHTML = data.content.map(item => `
-                        <div class="content-card">
-                            <div class="content-header">
-                                <div>
-                                    <div class="content-title">${escapeHtml(item.title || '无标题')}</div>
-                                    <div class="content-meta">
-                                        <span>📅 ${formatDate(item.created_at)}</span>
-                                        <span>📊 平台：${item.platform || '未知'}</span>
-                                        <span>👁️ ${item.metrics_views || 0}</span>
-                                    </div>
-                                </div>
-                                <div class="content-status status-${item.status || 'draft'}">
-                                    ${item.status === 'published' ? '✅ 已发布' : '📝 草稿'}
-                                </div>
-                            </div>
-                            
-                            ${item.created_by ? `
-                            <div class="task-info">
-                                <div class="task-info-title">📋 任务分配信息</div>
-                                <div class="task-info-grid">
-                                    <div class="task-info-item">
-                                        <span class="task-info-label">创建员工 ID</span>
-                                        <span class="task-info-value">${item.created_by}</span>
-                                    </div>
-                                    <div class="task-info-item">
-                                        <span class="task-info-label">状态</span>
-                                        <span class="task-info-value">${item.status || '草稿'}</span>
-                                    </div>
-                                    <div class="task-info-item">
-                                        <span class="task-info-label">创建时间</span>
-                                        <span class="task-info-value">${formatDate(item.created_at)}</span>
-                                    </div>
-                                </div>
-                            </div>
-                            ` : ''}
-                            
-                            <div class="content-body">${escapeHtml(item.body || '无内容')}</div>
-                        </div>
-                    `).join('');
-                })
-                .catch(err => {
-                    console.error(err);
-                    document.getElementById('content-list').innerHTML = '<div class="empty">❌ 加载失败</div>';
+            Promise.all([
+                fetch('/api/content').then(r => r.json()),
+                fetch('/api/employees').then(r => r.json())
+            ])
+            .then(([contentData, employeesData]) => {
+                allContent = contentData.content || [];
+                employees = {};
+                employeesData.employees.forEach(emp => {
+                    employees[emp.id] = emp;
                 });
+                
+                // 按员工分组
+                const grouped = {};
+                allContent.forEach(item => {
+                    const empId = item.created_by || 'unknown';
+                    if (!grouped[empId]) grouped[empId] = [];
+                    grouped[empId].push(item);
+                });
+                
+                // 更新统计
+                updateStats(grouped);
+                
+                // 更新筛选按钮
+                updateFilterButtons(grouped);
+                
+                // 渲染内容
+                renderContent(grouped);
+            })
+            .catch(err => {
+                console.error(err);
+                document.getElementById('content-container').innerHTML = '<div class="empty">❌ 加载失败</div>';
+            });
+        }
+        
+        function updateStats(grouped) {
+            const total = allContent.length;
+            const empCount = Object.keys(grouped).length;
+            const published = allContent.filter(c => c.status === 'published').length;
+            const draft = allContent.filter(c => c.status === 'draft').length;
+            
+            document.getElementById('stat-total').textContent = total;
+            document.getElementById('stat-employees').textContent = empCount;
+            document.getElementById('stat-published').textContent = published;
+            document.getElementById('stat-draft').textContent = draft;
+            
+            document.getElementById('count-all').textContent = total;
+        }
+        
+        function updateFilterButtons(grouped) {
+            const container = document.getElementById('filter-buttons');
+            
+            // 保留"全部"按钮，添加员工筛选按钮
+            Object.keys(grouped).forEach(empId => {
+                const emp = employees[empId];
+                const count = grouped[empId].length;
+                
+                const existing = container.querySelector(`[data-employee="${empId}"]`);
+                if (!existing) {
+                    const btn = document.createElement('button');
+                    btn.className = 'filter-btn';
+                    btn.dataset.employee = empId;
+                    btn.innerHTML = `
+                        ${emp ? emp.avatar : '👤'} 
+                        ${emp ? emp.name : '未知员工'}
+                        <span class="filter-count">${count}</span>
+                    `;
+                    btn.onclick = function() {
+                        filterContent(empId);
+                    };
+                    container.appendChild(btn);
+                } else {
+                    existing.querySelector('.filter-count').textContent = count;
+                }
+            });
+        }
+        
+        function filterContent(employeeId) {
+            currentFilter = employeeId;
+            
+            // 更新按钮状态
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.employee === employeeId);
+            });
+            
+            // 重新渲染
+            const grouped = {};
+            allContent.forEach(item => {
+                const empId = item.created_by || 'unknown';
+                if (!grouped[empId]) grouped[empId] = [];
+                grouped[empId].push(item);
+            });
+            
+            renderContent(grouped);
+        }
+        
+        function renderContent(grouped) {
+            const container = document.getElementById('content-container');
+            
+            if (currentFilter === 'all') {
+                // 显示所有员工的内容
+                let html = '';
+                Object.keys(grouped).forEach(empId => {
+                    const emp = employees[empId];
+                    const contents = grouped[empId];
+                    
+                    html += `
+                        <div class="employee-section">
+                            <div class="employee-header">
+                                <div class="employee-avatar">${emp ? emp.avatar : '👤'}</div>
+                                <div>
+                                    <div class="employee-name">${emp ? emp.name : '未知员工'}</div>
+                                    <div class="employee-role">${emp ? emp.role : '未知角色'}</div>
+                                </div>
+                                <div class="employee-count">${contents.length} 条内容</div>
+                            </div>
+                            <div class="content-list">
+                                ${contents.map(item => renderContentCard(item)).join('')}
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                container.innerHTML = html || '<div class="empty"><div class="empty-icon">📄</div><h3>暂无产出内容</h3><p>等待 AI 员工创作文案...</p></div>';
+            } else {
+                // 显示指定员工的内容
+                const contents = grouped[currentFilter] || [];
+                const emp = employees[currentFilter];
+                
+                if (contents.length === 0) {
+                    container.innerHTML = '<div class="empty"><div class="empty-icon">📄</div><h3>该员工暂无产出内容</h3></div>';
+                    return;
+                }
+                
+                container.innerHTML = `
+                    <div class="employee-section">
+                        <div class="employee-header">
+                            <div class="employee-avatar">${emp ? emp.avatar : '👤'}</div>
+                            <div>
+                                <div class="employee-name">${emp ? emp.name : '未知员工'}</div>
+                                <div class="employee-role">${emp ? emp.role : '未知角色'}</div>
+                            </div>
+                            <div class="employee-count">${contents.length} 条内容</div>
+                        </div>
+                        <div class="content-list">
+                            ${contents.map(item => renderContentCard(item)).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+        }
+        
+        function renderContentCard(item) {
+            return `
+                <div class="content-card">
+                    <div class="content-title">${escapeHtml(item.title || '无标题')}</div>
+                    <div class="content-meta">
+                        <span>📅 ${formatDate(item.created_at)}</span>
+                        <span>📊 ${item.platform || '未知'}</span>
+                        <span>👁️ ${item.metrics_views || 0}</span>
+                    </div>
+                    <div style="margin-bottom: 10px;">
+                        <span class="content-status status-${item.status || 'draft'}">
+                            ${item.status === 'published' ? '✅ 已发布' : '📝 草稿'}
+                        </span>
+                    </div>
+                    <div class="content-preview">${escapeHtml(item.body || '无内容')}</div>
+                </div>
+            `;
         }
         
         function formatDate(dateStr) {
