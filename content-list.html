@@ -222,7 +222,17 @@
         <header>
             <div class="header-title">📄 产出内容</div>
             <div class="header-subtitle">查看 AI 员工创作的所有内容</div>
-            <a href="/employee-dashboard.html" class="back-btn">← 返回仪表板</a>
+            <div style="display: flex; gap: 15px; margin-top: 15px; align-items: center; flex-wrap: wrap;">
+                <div style="display: flex; align-items: center; gap: 8px; font-size: 0.85em; color: var(--text-secondary);">
+                    <span>🕐</span>
+                    <span id="current-time">--:--:--</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px; font-size: 0.85em; color: var(--text-secondary);">
+                    <span>👁️</span>
+                    <span>访问次数：<strong id="visit-count" style="color: var(--accent-primary);">0</strong></span>
+                </div>
+                <a href="/employee-dashboard.html" class="back-btn" style="margin-top: 0;">← 返回仪表板</a>
+            </div>
         </header>
         
         <div class="stats-bar">
@@ -454,6 +464,33 @@
         
         // 初始加载
         loadContent();
+        
+        // 更新时间组件
+        function updateTime() {
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('zh-CN', { 
+                hour: '2-digit', 
+                minute: '2-digit', 
+                second: '2-digit' 
+            });
+            document.getElementById('current-time').textContent = timeStr;
+        }
+        
+        // 更新访问次数
+        function updateVisitCount() {
+            const storageKey = 'content-page-visit-count';
+            let count = parseInt(localStorage.getItem(storageKey) || '0');
+            count++;
+            localStorage.setItem(storageKey, count.toString());
+            document.getElementById('visit-count').textContent = count;
+        }
+        
+        // 每秒更新时间
+        setInterval(updateTime, 1000);
+        updateTime();
+        
+        // 更新访问次数
+        updateVisitCount();
     </script>
 </body>
 </html>
