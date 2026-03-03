@@ -39,11 +39,7 @@
             border-radius: 10px;
         }
         
-        .header-title {
-            font-size: 1.5em;
-            font-weight: 600;
-            margin-bottom: 10px;
-        }
+        .header-title { font-size: 1.5em; font-weight: 600; margin-bottom: 10px; }
         
         .back-btn {
             display: inline-block;
@@ -57,10 +53,7 @@
             transition: all 0.2s;
         }
         
-        .back-btn:hover {
-            background: var(--bg-hover);
-            color: var(--text-primary);
-        }
+        .back-btn:hover { background: var(--bg-hover); color: var(--text-primary); }
         
         .task-card {
             background: var(--bg-card);
@@ -79,11 +72,7 @@
             border-bottom: 1px solid var(--border-color);
         }
         
-        .task-title {
-            font-size: 1.5em;
-            font-weight: 600;
-            margin-bottom: 10px;
-        }
+        .task-title { font-size: 1.5em; font-weight: 600; margin-bottom: 10px; }
         
         .task-meta {
             display: flex;
@@ -99,19 +88,10 @@
             font-weight: 500;
         }
         
-        .status-completed {
-            background: rgba(16, 185, 129, 0.15);
-            color: var(--accent-success);
-        }
+        .status-completed { background: rgba(16, 185, 129, 0.15); color: var(--accent-success); }
+        .status-pending { background: rgba(245, 158, 11, 0.15); color: var(--accent-warning); }
         
-        .status-pending {
-            background: rgba(245, 158, 11, 0.15);
-            color: var(--accent-warning);
-        }
-        
-        .task-section {
-            margin-bottom: 25px;
-        }
+        .task-section { margin-bottom: 25px; }
         
         .section-title {
             font-size: 1.1em;
@@ -144,30 +124,15 @@
         .timeline-time {
             font-size: 0.85em;
             color: var(--text-muted);
-            min-width: 150px;
+            min-width: 180px;
         }
         
-        .timeline-content {
-            flex: 1;
-        }
+        .timeline-content { flex: 1; }
+        .timeline-from { font-weight: 500; color: var(--accent-primary); margin-bottom: 5px; }
+        .timeline-message { color: var(--text-secondary); line-height: 1.6; white-space: pre-wrap; }
         
-        .timeline-from {
-            font-weight: 500;
-            color: var(--accent-primary);
-            margin-bottom: 5px;
-        }
-        
-        .timeline-message {
-            color: var(--text-secondary);
-            line-height: 1.6;
-            white-space: pre-wrap;
-        }
-        
-        .loading {
-            text-align: center;
-            padding: 50px;
-            color: var(--text-secondary);
-        }
+        .loading { text-align: center; padding: 50px; color: var(--text-secondary); }
+        .error { text-align: center; padding: 50px; color: var(--accent-warning); }
     </style>
 </head>
 <body>
@@ -190,21 +155,22 @@
     </div>
     
     <script>
-        // 从 URL 获取任务 ID
         const urlParams = new URLSearchParams(window.location.search);
         const taskId = urlParams.get('id');
         
         if (!taskId) {
-            document.getElementById('task-detail').innerHTML = '<div class="loading">❌ 未找到任务 ID</div>';
+            document.getElementById('task-detail').innerHTML = '<div class="error">❌ 未找到任务 ID<br><br><a href="/employee-dashboard.html" class="back-btn">返回仪表板</a></div>';
+        } else {
+            loadTaskDetail();
+            loadTimeline();
         }
         
-        // 加载任务详情
         function loadTaskDetail() {
             fetch(`/api/task/${taskId}`)
                 .then(r => r.json())
                 .then(task => {
-                    if (!task.id) {
-                        document.getElementById('task-detail').innerHTML = '<div class="loading">❌ 任务不存在</div>';
+                    if (!task || !task.id) {
+                        document.getElementById('task-detail').innerHTML = '<div class="error">❌ 任务不存在<br><br><a href="/employee-dashboard.html" class="back-btn">返回仪表板</a></div>';
                         return;
                     }
                     
@@ -214,9 +180,9 @@
                     document.getElementById('task-detail').innerHTML = `
                         <div class="task-header">
                             <div>
-                                <div class="task-title">${task.title || '任务'}</div>
+                                <div class="task-title">${escapeHtml(task.title || '任务')}</div>
                                 <div class="task-meta">
-                                    <span>📊 来源：${task.source || '未知'}</span>
+                                    <span>📊 来源：${escapeHtml(task.source || '未知')}</span>
                                     <span>🔥 优先级：P${task.priority || 1}</span>
                                     <span>📅 创建：${formatDate(task.created_at)}</span>
                                 </div>
@@ -226,26 +192,32 @@
                         
                         <div class="task-section">
                             <div class="section-title">📝 任务描述</div>
-                            <div class="task-description">${task.description || '无描述'}</div>
+                            <div class="task-description">${escapeHtml(task.description || '无描述')}</div>
                         </div>
                         
                         ${task.assigned_to ? `
                         <div class="task-section">
                             <div class="section-title">👤 执行员工</div>
-                            <div class="task-description">${task.assigned_to}</div>
+                            <div class="task-description">${escapeHtml(task.assigned_to)}</div>
+                        </div>
+                        ` : ''}
+                        
+                        ${task.review_comment ? `
+                        <div class="task-section">
+                            <div class="section-title">✅ 审核意见</div>
+                            <div class="task-description">${escapeHtml(task.review_comment)}</div>
                         </div>
                         ` : ''}
                     `;
                 })
                 .catch(err => {
                     console.error(err);
-                    document.getElementById('task-detail').innerHTML = '<div class="loading">❌ 加载失败</div>';
+                    document.getElementById('task-detail').innerHTML = '<div class="error">❌ 加载失败<br><br><a href="/employee-dashboard.html" class="back-btn">返回仪表板</a></div>';
                 });
         }
         
-        // 加载交互记录
         function loadTimeline() {
-            fetch(`/api/interactions?limit=100`)
+            fetch('/api/interactions?limit=100')
                 .then(r => r.json())
                 .then(data => {
                     const list = document.getElementById('timeline-list');
@@ -262,17 +234,17 @@
                             </div>
                             <div class="timeline-content">
                                 <div class="timeline-from">
-                                    ${int.from_name || int.from_employee} → ${int.to_name || int.to_employee}
-                                    <span style="margin-left: 10px; color: var(--text-muted);">[${int.task_type || '消息'}]</span>
+                                    ${escapeHtml(int.from_name || int.from_employee)} → ${escapeHtml(int.to_name || int.to_employee)}
+                                    <span style="margin-left: 10px; color: var(--text-muted);">[${escapeHtml(int.task_type || '消息')}]</span>
                                 </div>
-                                <div class="timeline-message">${int.message}</div>
+                                <div class="timeline-message">${escapeHtml(int.message)}</div>
                             </div>
                         </div>
                     `).join('');
                 })
                 .catch(err => {
                     console.error(err);
-                    document.getElementById('timeline-list').innerHTML = '<div class="loading">❌ 加载失败</div>';
+                    document.getElementById('timeline-list').innerHTML = '<div class="error">❌ 加载失败</div>';
                 });
         }
         
@@ -282,30 +254,23 @@
             const now = new Date();
             const diff = now - date;
             
-            // 显示完整日期时间
-            const datePart = date.toLocaleDateString('zh-CN', { 
-                month: '2-digit', 
-                day: '2-digit',
-                year: 'numeric'
-            });
-            const timePart = date.toLocaleTimeString('zh-CN', { 
-                hour: '2-digit', 
-                minute: '2-digit',
-                second: '2-digit'
-            });
+            const datePart = date.toLocaleDateString('zh-CN', { month: '2-digit', day: '2-digit', year: 'numeric' });
+            const timePart = date.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
             
-            if (diff < 3600000) {
-                return `${datePart} ${timePart} (${Math.floor(diff / 60000)}分钟前)`;
-            } else if (diff < 86400000) {
-                return `${datePart} ${timePart} (${Math.floor(diff / 3600000)}小时前)`;
-            } else {
-                return `${datePart} ${timePart}`;
-            }
+            let relative = '';
+            if (diff < 60000) relative = ' (刚刚)';
+            else if (diff < 3600000) relative = ` (${Math.floor(diff / 60000)}分钟前)`;
+            else if (diff < 86400000) relative = ` (${Math.floor(diff / 3600000)}小时前)`;
+            
+            return `${datePart} ${timePart}${relative}`;
         }
         
-        // 初始加载
-        loadTaskDetail();
-        loadTimeline();
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
     </script>
 </body>
 </html>
