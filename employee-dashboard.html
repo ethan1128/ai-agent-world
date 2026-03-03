@@ -56,6 +56,13 @@
             border-radius: 10px;
             padding: 20px;
             text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .stat-card:hover {
+            border-color: var(--accent-primary);
+            background: var(--bg-hover);
         }
         
         .stat-value { font-size: 2em; font-weight: 700; color: var(--accent-primary); }
@@ -169,6 +176,30 @@
             font-size: 0.85em;
             display: none;
         }
+        
+        .filter-bar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .filter-btn {
+            padding: 6px 14px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 0.85em;
+            transition: all 0.2s;
+        }
+        
+        .filter-btn:hover, .filter-btn.active {
+            background: var(--accent-primary);
+            color: white;
+            border-color: var(--accent-primary);
+        }
     </style>
 </head>
 <body>
@@ -179,21 +210,21 @@
         </header>
         
         <div class="stats-bar">
-            <div class="stat-card">
+            <div class="stat-card" onclick="alert('员工总数：' + document.getElementById('stat-employees').textContent)" title="点击查看员工详情">
                 <div class="stat-value" id="stat-employees">0</div>
-                <div class="stat-label">员工数量</div>
+                <div class="stat-label">👥 员工数量</div>
             </div>
-            <div class="stat-card">
+            <div class="stat-card" onclick="filterInteractions('all')" title="点击查看所有交互">
                 <div class="stat-value" id="stat-interactions">0</div>
-                <div class="stat-label">交互次数</div>
+                <div class="stat-label">💬 交互次数</div>
             </div>
-            <div class="stat-card">
+            <div class="stat-card" onclick="filterInteractions('pending')" title="点击查看进行中任务">
                 <div class="stat-value" id="stat-tasks">0</div>
-                <div class="stat-label">进行中任务</div>
+                <div class="stat-label">📋 进行中任务</div>
             </div>
-            <div class="stat-card">
+            <div class="stat-card" onclick="filterInteractions('completed')" title="点击查看已完成任务">
                 <div class="stat-value" id="stat-completed">0</div>
-                <div class="stat-label">已完成任务</div>
+                <div class="stat-label">✅ 已完成任务</div>
             </div>
         </div>
         
@@ -207,6 +238,14 @@
             
             <div class="interactions-panel">
                 <div class="panel-title">💬 交互记录</div>
+                
+                <div class="filter-bar">
+                    <button class="filter-btn active" onclick="filterInteractions('all')">全部</button>
+                    <button class="filter-btn" onclick="filterInteractions('task_complete')">✅ 已完成</button>
+                    <button class="filter-btn" onclick="filterInteractions('task_assign')">📋 任务分配</button>
+                    <button class="filter-btn" onclick="filterInteractions('workflow_complete')">🔄 工作流</button>
+                </div>
+                
                 <div class="interaction-list" id="interaction-list">
                     <div style="text-align: center; color: var(--text-secondary); padding: 20px;">加载中...</div>
                 </div>
@@ -217,6 +256,9 @@
     <div class="refresh-indicator" id="refresh-indicator">🔄 数据已更新</div>
     
     <script>
+        let allInteractions = [];
+        let currentFilter = 'all';
+        
         function loadEmployees() {
             fetch('/api/employees')
                 .then(r => r.json())
@@ -251,44 +293,72 @@
             fetch('/api/interactions?limit=100')
                 .then(r => r.json())
                 .then(data => {
-                    const list = document.getElementById('interaction-list');
+                    allInteractions = data.interactions;
                     
                     // 统计交互次数
-                    document.getElementById('stat-interactions').textContent = data.interactions.length;
+                    document.getElementById('stat-interactions').textContent = allInteractions.length;
                     
-                    // 统计进行中任务（task_assign 且未完成）
-                    const pendingTasks = data.interactions.filter(int => 
+                    // 统计进行中任务
+                    const pendingTasks = allInteractions.filter(int => 
                         int.task_type === 'task_assign' && int.status === 'pending'
                     ).length;
                     document.getElementById('stat-tasks').textContent = pendingTasks;
                     
-                    // 统计已完成任务（task_complete）
-                    const completedTasks = data.interactions.filter(int => 
+                    // 统计已完成任务
+                    const completedTasks = allInteractions.filter(int => 
                         int.task_type === 'task_complete'
                     ).length;
                     document.getElementById('stat-completed').textContent = completedTasks;
                     
-                    if (!data.interactions || data.interactions.length === 0) {
-                        list.innerHTML = '<div style="text-align: center; color: var(--text-secondary); padding: 20px;">暂无交互记录</div>';
-                        return;
-                    }
-                    
-                    list.innerHTML = data.interactions.map(int => `
-                        <div class="interaction-item" onclick="int.task_id ? window.location.href='/task-detail.html?id=${int.task_id}' : alert('该交互没有关联任务')">
-                            <div class="interaction-header">
-                                <span class="interaction-from">${int.from_avatar || '👤'} ${int.from_name || int.from_employee}</span>
-                                <span class="interaction-arrow">→</span>
-                                <span class="interaction-to">${int.to_avatar || '👤'} ${int.to_name || int.to_employee}</span>
-                                <span class="interaction-type">${int.task_type || '消息'}</span>
-                                <span class="interaction-time">${formatTime(int.created_at)}</span>
-                            </div>
-                            <div class="interaction-message">${int.message}</div>
-                        </div>
-                    `).join('');
-                    
+                    renderInteractions(allInteractions);
                     showRefreshIndicator();
                 })
                 .catch(err => console.error('加载交互失败:', err));
+        }
+        
+        function filterInteractions(filter) {
+            currentFilter = filter;
+            
+            // 更新按钮状态
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.textContent.toLowerCase().includes(filter === 'all' ? '全部' : filter === 'completed' ? '已完成' : filter));
+            });
+            
+            let filtered = allInteractions;
+            
+            if (filter === 'completed' || filter === 'task_complete') {
+                filtered = allInteractions.filter(int => int.task_type === 'task_complete');
+            } else if (filter === 'pending') {
+                filtered = allInteractions.filter(int => int.task_type === 'task_assign' && int.status === 'pending');
+            } else if (filter === 'task_assign') {
+                filtered = allInteractions.filter(int => int.task_type === 'task_assign');
+            } else if (filter === 'workflow_complete') {
+                filtered = allInteractions.filter(int => int.task_type === 'workflow_complete');
+            }
+            
+            renderInteractions(filtered);
+        }
+        
+        function renderInteractions(interactions) {
+            const list = document.getElementById('interaction-list');
+            
+            if (!interactions || interactions.length === 0) {
+                list.innerHTML = '<div style="text-align: center; color: var(--text-secondary); padding: 20px;">暂无交互记录</div>';
+                return;
+            }
+            
+            list.innerHTML = interactions.map(int => `
+                <div class="interaction-item" onclick="${int.task_id ? `window.location.href='/task-detail.html?id=${int.task_id}'` : `alert('该交互没有关联任务')`}">
+                    <div class="interaction-header">
+                        <span class="interaction-from">${int.from_avatar || '👤'} ${int.from_name || int.from_employee}</span>
+                        <span class="interaction-arrow">→</span>
+                        <span class="interaction-to">${int.to_avatar || '👤'} ${int.to_name || int.to_employee}</span>
+                        <span class="interaction-type">${int.task_type || '消息'}</span>
+                        <span class="interaction-time">${formatTime(int.created_at)}</span>
+                    </div>
+                    <div class="interaction-message">${int.message}</div>
+                </div>
+            `).join('');
         }
         
         function formatTime(dateStr) {
@@ -301,11 +371,11 @@
             const timePart = date.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
             
             let relative = '';
-            if (diff < 60000) relative = '刚刚';
-            else if (diff < 3600000) relative = `(${Math.floor(diff / 60000)}分钟前)`;
-            else if (diff < 86400000) relative = `(${Math.floor(diff / 3600000)}小时前)`;
+            if (diff < 60000) relative = ' (刚刚)';
+            else if (diff < 3600000) relative = ` (${Math.floor(diff / 60000)}分钟前)`;
+            else if (diff < 86400000) relative = ` (${Math.floor(diff / 3600000)}小时前)`;
             
-            return `${datePart} ${timePart} ${relative}`;
+            return `${datePart} ${timePart}${relative}`;
         }
         
         function showRefreshIndicator() {
