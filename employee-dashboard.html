@@ -291,9 +291,36 @@
 </head>
 <body>
     <div class="container">
+        <div class="calendar-header">
+            <div class="calendar-date-section">
+                <div class="calendar-date" id="calendar-date">--</div>
+                <div class="calendar-weekday" id="calendar-weekday">------</div>
+                <div class="calendar-time" id="calendar-time">--:--:--</div>
+            </div>
+            <div class="calendar-stats-section">
+                <div class="calendar-stat-card">
+                    <div class="calendar-stat-value" id="stat-visit">0</div>
+                    <div class="calendar-stat-label">👁️ 访问次数</div>
+                </div>
+                <div class="calendar-stat-card">
+                    <div class="calendar-stat-value" id="stat-employees">0</div>
+                    <div class="calendar-stat-label">👥 员工数</div>
+                </div>
+                <div class="calendar-stat-card">
+                    <div class="calendar-stat-value" id="stat-interactions">0</div>
+                    <div class="calendar-stat-label">💬 交互数</div>
+                </div>
+            </div>
+        </div>
+        
         <header>
             <div class="header-title">🤖 数字员工协作平台</div>
-            <div class="header-subtitle">实时直播员工交互</div>
+            <div class="header-subtitle">
+                <span style="display: inline-flex; align-items: center; gap: 8px;">
+                    <span style="width: 8px; height: 8px; background: var(--accent-success); border-radius: 50%; animation: pulse 2s infinite;"></span>
+                    实时直播员工交互
+                </span>
+            </div>
             <div style="margin-top: 15px;">
                 <a href="https://github.com/ethan1128/ai-agent-world" target="_blank" style="display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-secondary); text-decoration: none; font-size: 0.85em; transition: all 0.2s;">
                     <svg style="width: 18px; height: 18px;" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
@@ -387,40 +414,44 @@
         }
         
         function loadInteractions() {
-            fetch('/api/interactions?limit=100')
-                .then(r => r.json())
-                .then(data => {
-                    allInteractions = data.interactions;
-                    
-                    // 统计交互次数
-                    document.getElementById('stat-interactions').textContent = allInteractions.length;
-                    
-                    // 统计进行中任务
-                    const pendingTasks = allInteractions.filter(int => 
-                        int.task_type === 'task_assign' && int.status === 'pending'
-                    ).length;
-                    document.getElementById('stat-tasks').textContent = pendingTasks;
-                    
-                    // 获取产出内容数量
-            fetch('/api/content')
-                .then(r => r.json())
-                .then(data => {
-                    document.getElementById('stat-content').textContent = data.content.length;
-                })
-                .catch(() => {});
-            
-            // 统计已完成任务
-                    const completedTasks = allInteractions.filter(int => 
-                        int.task_type === 'task_complete'
-                    ).length;
-                    document.getElementById('stat-completed').textContent = completedTasks;
-                    
-                    // 保持当前筛选状态
-                    filterInteractions(currentFilter, false);
-                    
-                    showRefreshIndicator();
-                })
-                .catch(err => console.error('加载交互失败:', err));
+            Promise.all([
+                fetch('/api/interactions?limit=500').then(r => r.json()),
+                fetch('/api/content').then(r => r.json()),
+                fetch('/api/employees').then(r => r.json())
+            ])
+            .then(([interactionsData, contentData, employeesData]) => {
+                allInteractions = interactionsData.interactions || [];
+                
+                // 统计交互次数（真实数据）
+                document.getElementById('stat-interactions').textContent = allInteractions.length;
+                
+                // 统计进行中任务（真实数据）
+                const pendingTasks = allInteractions.filter(int => 
+                    int.task_type === 'task_assign' && int.status === 'pending'
+                ).length;
+                document.getElementById('stat-tasks').textContent = pendingTasks;
+                
+                // 统计已完成任务（真实数据）
+                const completedTasks = allInteractions.filter(int => 
+                    int.task_type === 'task_complete'
+                ).length;
+                document.getElementById('stat-completed').textContent = completedTasks;
+                
+                // 产出内容数量（真实数据）
+                document.getElementById('stat-content').textContent = contentData.content?.length || 0;
+                
+                // 员工数量（真实数据）
+                document.getElementById('stat-employees').textContent = employeesData.employees?.length || 0;
+                
+                // 更新日历统计卡片
+                document.getElementById('stat-visit').textContent = parseInt(localStorage.getItem('dashboard-visit-count') || '0');
+                
+                // 保持当前筛选状态
+                filterInteractions(currentFilter, false);
+                
+                showRefreshIndicator();
+            })
+            .catch(err => console.error('加载数据失败:', err));
         }
         
         function filterInteractions(filter, resetScroll = true) {
