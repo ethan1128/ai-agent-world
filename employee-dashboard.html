@@ -560,13 +560,21 @@
             document.getElementById('calendar-time').textContent = timeStr;
         }
         
-        // 更新访问次数
+                // 更新访问次数 - 从 API 获取真实数据
         function updateVisitCount() {
-            const storageKey = 'dashboard-visit-count';
-            let count = parseInt(localStorage.getItem(storageKey) || '0');
-            count++;
-            localStorage.setItem(storageKey, count.toString());
-            document.getElementById('stat-visit').textContent = count;
+            fetch('/api/visit-count')
+                .then(r => r.json())
+                .then(data => {
+                    document.getElementById('stat-visit').textContent = data.total || 0;
+                })
+                .catch(() => {
+                    // fallback: 使用 localStorage
+                    const storageKey = 'dashboard-visit-count';
+                    let count = parseInt(localStorage.getItem(storageKey) || '0');
+                    count++;
+                    localStorage.setItem(storageKey, count.toString());
+                    document.getElementById('stat-visit').textContent = count;
+                });
         }
         
         // 更新访问次数

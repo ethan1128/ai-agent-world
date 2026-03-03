@@ -19,7 +19,10 @@ class APIHandler(SimpleHTTPRequestHandler):
     def do_GET(self):
         parsed = urlparse(self.path)
         
-        if parsed.path == '/api/status':
+        if parsed.path == '/api/visit-count':
+            record_visit('dashboard')
+            self.send_json(get_visit_count())
+        elif parsed.path == '/api/status':
             self.send_json(get_status())
         elif parsed.path == '/api/employees':
             self.send_json(get_employees())
@@ -142,3 +145,39 @@ if __name__ == '__main__':
     server = HTTPServer(('0.0.0.0', 8888), APIHandler)
     print("🚀 Server started on port 8888")
     server.serve_forever()
+
+def get_visit_count():
+    """获取访问次数"""
+    from datetime import datetime, timedelta
+    
+    conn = get_db()
+    cursor = conn.cursor()
+    
+    # 统计总访问次数
+    cursor.execute('SELECT COUNT(*) FROM page_visits')
+    total = cursor.fetchone()[0]
+    
+    # 统计今日访问
+    cursor.execute("SELECT COUNT(*) FROM page_visits WHERE date(visited_at) = date('now')")
+    today = cursor.fetchone()[0]
+    
+    conn.close()
+    
+    return {'total': total, 'today': today}
+
+def record_visit(page='dashboard'):
+    """记录访问"""
+    from datetime import datetime
+    
+    conn = get_db()
+    cursor = conn.cursor()
+    
+    cursor.execute('''
+        INSERT INTO page_visits (page, user_agent, visited_at)
+        VALUES (?, ?, ?)
+    ''', (page, 'web', datetime.now()))
+    
+    conn.commit()
+    conn.close()
+
+
