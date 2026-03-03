@@ -424,7 +424,7 @@
                 document.getElementById('stat-employees').textContent = employeesData.employees?.length || 0;
                 
                 // 更新日历统计卡片
-                document.getElementById('stat-visit').textContent = parseInt(localStorage.getItem('dashboard-visit-count') || '0');
+                
                 
                 // 保持当前筛选状态
                 filterInteractions(currentFilter, false);
@@ -561,29 +561,17 @@
         }
         
                 // 更新访问次数 - 从 API 获取真实数据
+                // 更新访问次数 - 从 API 获取真实数据
         function updateVisitCount() {
             fetch('/api/visit-count')
                 .then(r => r.json())
                 .then(data => {
                     document.getElementById('stat-visit').textContent = data.total || 0;
                 })
-                .catch(() => {
-                    // fallback: 使用 localStorage
-                    const storageKey = 'dashboard-visit-count';
-                    let count = parseInt(localStorage.getItem(storageKey) || '0');
-                    count++;
-                    localStorage.setItem(storageKey, count.toString());
-                    document.getElementById('stat-visit').textContent = count;
+                .catch(err => {
+                    console.error('获取访问次数失败:', err);
+                    document.getElementById('stat-visit').textContent = '0';
                 });
-        }
-        
-        // 更新访问次数
-        function updateVisitCount() {
-            const storageKey = 'dashboard-visit-count';
-            let count = parseInt(localStorage.getItem(storageKey) || '0');
-            count++;
-            localStorage.setItem(storageKey, count.toString());
-            document.getElementById('visit-count').textContent = count;
         }
         
         // 每秒更新时间

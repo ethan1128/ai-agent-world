@@ -146,38 +146,32 @@ if __name__ == '__main__':
     print("🚀 Server started on port 8888")
     server.serve_forever()
 
-def get_visit_count():
-    """获取访问次数"""
-    from datetime import datetime, timedelta
-    
+
+def record_visit_final(page='dashboard'):
+    """记录访问"""
     conn = get_db()
     cursor = conn.cursor()
-    
-    # 统计总访问次数
+    cursor.execute('INSERT INTO page_visits (page, user_agent, visited_at) VALUES (?, ?, ?)', (page, 'web', datetime.datetime.now()))
+    conn.commit()
+    conn.close()
+
+# ========== 访问统计函数 ==========
+def get_visit_count():
+    """获取访问次数"""
+    conn = get_db()
+    cursor = conn.cursor()
     cursor.execute('SELECT COUNT(*) FROM page_visits')
     total = cursor.fetchone()[0]
-    
-    # 统计今日访问
     cursor.execute("SELECT COUNT(*) FROM page_visits WHERE date(visited_at) = date('now')")
     today = cursor.fetchone()[0]
-    
     conn.close()
-    
     return {'total': total, 'today': today}
 
 def record_visit(page='dashboard'):
     """记录访问"""
-    from datetime import datetime
-    
+    import datetime
     conn = get_db()
     cursor = conn.cursor()
-    
-    cursor.execute('''
-        INSERT INTO page_visits (page, user_agent, visited_at)
-        VALUES (?, ?, ?)
-    ''', (page, 'web', datetime.now()))
-    
+    cursor.execute('INSERT INTO page_visits (page, user_agent, visited_at) VALUES (?, ?, ?)', (page, 'web', datetime.datetime.now()))
     conn.commit()
     conn.close()
-
-

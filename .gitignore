@@ -1,4 +1,4 @@
-# 数据库文件
+# 数据库
 *.db
 *.sqlite
 *.sqlite3
@@ -6,6 +6,12 @@
 # 日志文件
 *.log
 logs/
+
+# Cookie 和配置
+cookies.json
+*.local.json
+.env
+.env.local
 
 # Python 缓存
 __pycache__/
@@ -16,7 +22,7 @@ __pycache__/
 # 虚拟环境
 venv/
 env/
-.env
+.venv/
 
 # IDE
 .vscode/
@@ -29,13 +35,31 @@ env/
 .DS_Store
 Thumbs.db
 
-# 敏感信息
-.env.local
-*.key
-*.pem
-config.local.json
-
 # 临时文件
 tmp/
 temp/
 *.tmp
+
+# 敏感信息
+config.local.py
+secrets.json
+*.key
+*.pem
+
+# 内部工具（不公开）
+hot-topics-sender.py
+employee-collab*.py
+task-*.py
+ai-*.py
+cleanup.py
+view.py
+update_*.py
+test-*.py
+baidu-hot-search.py
+hot-topics*.py
+news-*.py
+real-*.py
+platform-crawler.py
+task-collector-service.py
+employee-sync.py
+employee-system.py
