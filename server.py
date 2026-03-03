@@ -27,6 +27,12 @@ class APIHandler(SimpleHTTPRequestHandler):
             query = parse_qs(parsed.query)
             limit = int(query.get('limit', [50])[0])
             self.send_json(get_interactions(limit))
+        elif parsed.path.startswith('/api/task/'):
+            task_id = parsed.path.split('/')[-1]
+            try:
+                self.send_json(get_task_detail(int(task_id)))
+            except:
+                self.send_json({})
         elif parsed.path == '/api/agents':
             self.send_json(get_agents())
         elif parsed.path == '/api/content':
@@ -37,6 +43,9 @@ class APIHandler(SimpleHTTPRequestHandler):
             self.send_json(get_monitor_data(platform))
         elif parsed.path == '/employee-dashboard.html':
             self.path = '/employee-dashboard.html'
+            super().do_GET()
+        elif parsed.path == '/task-detail.html':
+            self.path = '/task-detail.html'
             super().do_GET()
         elif parsed.path == '/dashboard.html':
             self.path = '/dashboard.html'
@@ -69,21 +78,31 @@ def get_interactions(limit=50):
     conn = get_db()
     cursor = conn.cursor()
     cursor.execute('''
-        SELECT i.*, e1.name as from_name, e1.avatar as from_avatar,
+        SELECT i.*, 
+               e1.name as from_name, e1.avatar as from_avatar,
                e2.name as to_name, e2.avatar as to_avatar
         FROM interactions i
         LEFT JOIN employees e1 ON i.from_employee = e1.session_key
         LEFT JOIN employees e2 ON i.to_employee = e2.session_key
-        ORDER BY i.created_at DESC LIMIT ?
+        ORDER BY i.created_at DESC
+        LIMIT ?
     ''', (limit,))
     interactions = [dict(row) for row in cursor.fetchall()]
     conn.close()
     return {'interactions': interactions}
 
+def get_task_detail(task_id):
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute('SELECT * FROM tasks WHERE id = ?', (task_id,))
+    task = cursor.fetchone()
+    conn.close()
+    return dict(task) if task else {}
+
 def get_status():
     conn = get_db()
     cursor = conn.cursor()
-    cursor.execute("SELECT COUNT(*) FROM agents")
+    cursor.execute("SELECT COUNT(*) FROM employees")
     total = cursor.fetchone()[0]
     conn.close()
     return {'total_agents': total, 'active_tasks': 0}
@@ -119,12 +138,3 @@ if __name__ == '__main__':
     server = HTTPServer(('0.0.0.0', 8888), APIHandler)
     print("🚀 Server started on port 8888")
     server.serve_forever()
-
-# 任务详情 API
-def get_task_detail(task_id):
-    conn = get_db()
-    cursor = conn.cursor()
-    cursor.execute('SELECT * FROM tasks WHERE id = ?', (task_id,))
-    task = cursor.fetchone()
-    conn.close()
-    return dict(task) if task else {}
