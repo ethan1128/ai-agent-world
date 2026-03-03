@@ -57,16 +57,19 @@ def get_hot_topics():
     hot_topics = []
     
     # 从不同平台获取热点
-    cursor.execute('SELECT title, views, platform FROM platform_monitor WHERE platform="web" ORDER BY views DESC LIMIT 2')
+    cursor.execute('SELECT title, views, platform FROM platform_monitor WHERE platform="web" ORDER BY views DESC LIMIT 5')
     hot_topics.extend([dict(row) for row in cursor.fetchall()])
     
-    cursor.execute('SELECT title, views, platform FROM platform_monitor WHERE platform="zhihu" ORDER BY views DESC LIMIT 1')
+    cursor.execute('SELECT title, views, platform FROM platform_monitor WHERE platform="zhihu" ORDER BY views DESC LIMIT 3')
     hot_topics.extend([dict(row) for row in cursor.fetchall()])
     
-    cursor.execute('SELECT title, views, platform FROM platform_monitor WHERE platform="douyin" ORDER BY views DESC LIMIT 1')
+    cursor.execute('SELECT title, views, platform FROM platform_monitor WHERE platform="douyin" ORDER BY views DESC LIMIT 3')
     hot_topics.extend([dict(row) for row in cursor.fetchall()])
     
-    cursor.execute('SELECT title, views, platform FROM platform_monitor WHERE platform="kuaishou" ORDER BY views DESC LIMIT 1')
+    cursor.execute('SELECT title, views, platform FROM platform_monitor WHERE platform="kuaishou" ORDER BY views DESC LIMIT 3')
+    hot_topics.extend([dict(row) for row in cursor.fetchall()])
+    
+    cursor.execute('SELECT title, views, platform FROM platform_monitor WHERE platform="xiaohongshu" ORDER BY views DESC LIMIT 3')
     hot_topics.extend([dict(row) for row in cursor.fetchall()])
     
     conn.close()
@@ -79,7 +82,7 @@ def get_hot_topics():
             seen_titles.add(topic['title'])
             unique_topics.append(topic)
     
-    return unique_topics[:5]
+    return unique_topics[:10]
 
 def task_collector_work():
     """任务收集专员真正工作 - 从多平台收集热点"""
@@ -240,7 +243,7 @@ def run_auto_workflow():
     # 3. 为每个热点创作文案和分析（每轮处理前 3 个热点）
     content_ids = [content_id_1, content_id_2]
     
-    for i, topic in enumerate(hot_topics[:3], 1):
+    for i, topic in enumerate(hot_topics[:5], 1):
         print(f"\n📝 步骤 3.{i}: 处理热点 \"{topic['title'][:20]}...\"")
         
         # 文曲星创作文案
