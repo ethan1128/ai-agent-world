@@ -39,6 +39,7 @@ def init_employee_db():
             task_type TEXT,
             status TEXT DEFAULT 'pending',
             result TEXT,
+            task_id INTEGER,
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
             completed_at DATETIME
         )
@@ -68,23 +69,23 @@ def register_employee(session_key, name, role, avatar):
     cursor = conn.cursor()
     
     cursor.execute('''
-        INSERT OR REPLACE INTO employees (session_key, name, role, avatar, status)
-        VALUES (?, ?, ?, ?, 'idle')
-    ''', (session_key, name, role, avatar))
+        INSERT OR REPLACE INTO employees (session_key, name, role, avatar, status, created_at)
+        VALUES (?, ?, ?, ?, 'idle', ?)
+    ''', (session_key, name, role, avatar, datetime.now()))
     
     conn.commit()
     conn.close()
     print(f"✅ 员工注册：{name} ({role})")
 
-def log_interaction(from_emp, to_emp, message, task_type='message'):
+def log_interaction(from_emp, to_emp, message, task_type='message', task_id=None):
     """记录交互"""
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     
     cursor.execute('''
-        INSERT INTO interactions (from_employee, to_employee, message, task_type, status, created_at)
-        VALUES (?, ?, ?, ?, 'pending', ?)
-    ''', (from_emp, to_emp, message, task_type, datetime.now()))
+        INSERT INTO interactions (from_employee, to_employee, message, task_type, status, task_id, created_at, completed_at)
+        VALUES (?, ?, ?, ?, 'completed', ?, ?, ?)
+    ''', (from_emp, to_emp, message, task_type, task_id, datetime.now(), datetime.now()))
     
     conn.commit()
     conn.close()

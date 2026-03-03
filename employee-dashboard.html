@@ -222,7 +222,7 @@
                 <div class="stat-value" id="stat-tasks">0</div>
                 <div class="stat-label">📋 进行中任务</div>
             </div>
-            <div class="stat-card" onclick="filterInteractions('completed')" title="点击查看已完成任务">
+            <div class="stat-card" onclick="filterInteractions('task_complete')" title="点击查看已完成任务">
                 <div class="stat-value" id="stat-completed">0</div>
                 <div class="stat-label">✅ 已完成任务</div>
             </div>
@@ -240,10 +240,10 @@
                 <div class="panel-title">💬 交互记录</div>
                 
                 <div class="filter-bar">
-                    <button class="filter-btn active" onclick="filterInteractions('all')">全部</button>
-                    <button class="filter-btn" onclick="filterInteractions('task_complete')">✅ 已完成</button>
-                    <button class="filter-btn" onclick="filterInteractions('task_assign')">📋 任务分配</button>
-                    <button class="filter-btn" onclick="filterInteractions('workflow_complete')">🔄 工作流</button>
+                    <button class="filter-btn active" data-filter="all">全部</button>
+                    <button class="filter-btn" data-filter="task_complete">✅ 已完成</button>
+                    <button class="filter-btn" data-filter="task_assign">📋 任务分配</button>
+                    <button class="filter-btn" data-filter="workflow_complete">🔄 工作流</button>
                 </div>
                 
                 <div class="interaction-list" id="interaction-list">
@@ -310,23 +310,25 @@
                     ).length;
                     document.getElementById('stat-completed').textContent = completedTasks;
                     
-                    renderInteractions(allInteractions);
+                    // 保持当前筛选状态
+                    filterInteractions(currentFilter, false);
+                    
                     showRefreshIndicator();
                 })
                 .catch(err => console.error('加载交互失败:', err));
         }
         
-        function filterInteractions(filter) {
+        function filterInteractions(filter, resetScroll = true) {
             currentFilter = filter;
             
             // 更新按钮状态
             document.querySelectorAll('.filter-btn').forEach(btn => {
-                btn.classList.toggle('active', btn.textContent.toLowerCase().includes(filter === 'all' ? '全部' : filter === 'completed' ? '已完成' : filter));
+                btn.classList.toggle('active', btn.dataset.filter === filter);
             });
             
             let filtered = allInteractions;
             
-            if (filter === 'completed' || filter === 'task_complete') {
+            if (filter === 'task_complete') {
                 filtered = allInteractions.filter(int => int.task_type === 'task_complete');
             } else if (filter === 'pending') {
                 filtered = allInteractions.filter(int => int.task_type === 'task_assign' && int.status === 'pending');
@@ -337,6 +339,10 @@
             }
             
             renderInteractions(filtered);
+            
+            if (resetScroll) {
+                document.getElementById('interaction-list').scrollTop = 0;
+            }
         }
         
         function renderInteractions(interactions) {
@@ -348,7 +354,7 @@
             }
             
             list.innerHTML = interactions.map(int => `
-                <div class="interaction-item" onclick="${int.task_id ? `window.location.href='/task-detail.html?id=${int.task_id}'` : `alert('该交互没有关联任务')`}">
+                <div class="interaction-item" onclick="handleInteractionClick(${int.task_id})">
                     <div class="interaction-header">
                         <span class="interaction-from">${int.from_avatar || '👤'} ${int.from_name || int.from_employee}</span>
                         <span class="interaction-arrow">→</span>
@@ -356,9 +362,17 @@
                         <span class="interaction-type">${int.task_type || '消息'}</span>
                         <span class="interaction-time">${formatTime(int.created_at)}</span>
                     </div>
-                    <div class="interaction-message">${int.message}</div>
+                    <div class="interaction-message">${escapeHtml(int.message)}</div>
                 </div>
             `).join('');
+        }
+        
+        function handleInteractionClick(taskId) {
+            if (taskId && taskId > 0) {
+                window.location.href = '/task-detail.html?id=' + taskId;
+            } else {
+                alert('该交互没有关联任务\n\n提示：只有 task_complete 类型的交互才有关联的任务');
+            }
         }
         
         function formatTime(dateStr) {
@@ -378,6 +392,13 @@
             return `${datePart} ${timePart}${relative}`;
         }
         
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
         function showRefreshIndicator() {
             const indicator = document.getElementById('refresh-indicator');
             indicator.style.display = 'block';
@@ -385,6 +406,13 @@
                 indicator.style.display = 'none';
             }, 2000);
         }
+        
+        // 绑定筛选按钮事件
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                filterInteractions(this.dataset.filter);
+            });
+        });
         
         // 初始加载
         loadEmployees();
