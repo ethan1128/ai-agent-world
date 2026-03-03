@@ -74,7 +74,7 @@ def get_employees():
     conn.close()
     return {'employees': employees}
 
-def get_interactions(limit=50):
+def get_interactions(limit=10000):
     conn = get_db()
     cursor = conn.cursor()
     cursor.execute('''

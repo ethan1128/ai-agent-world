@@ -395,7 +395,7 @@
         
         function loadInteractions() {
             Promise.all([
-                fetch('/api/interactions?limit=500').then(r => r.json()),
+                fetch('/api/interactions?limit=10000').then(r => r.json()),
                 fetch('/api/content').then(r => r.json()),
                 fetch('/api/employees').then(r => r.json())
             ])
