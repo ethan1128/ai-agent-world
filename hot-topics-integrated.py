@@ -25,30 +25,31 @@ def collect_all_hot_topics():
     # 1. 百度热搜
     print("📝 抓取百度热搜...")
     try:
-        result = subprocess.run(
-            ['python3', 'baidu-hot-search.py'],
-            cwd=os.path.dirname(__file__),
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            universal_newlines=True,
-            timeout=30
-        )
-        print("✅ 百度热搜完成")
+        # 直接调用百度热搜爬虫函数
+        import sys
+        sys.path.insert(0, os.path.dirname(__file__))
+        from baidu_hot_search_crawler import fetch_baidu_hot_search, save_to_database
+        baidu_topics = fetch_baidu_hot_search()
+        if baidu_topics:
+            save_to_database(baidu_topics)
+            print(f"✅ 百度热搜：{len(baidu_topics)} 条")
+        else:
+            print("⚠️  百度热搜：0 条")
     except Exception as e:
         print(f"⚠️  百度热搜失败：{e}")
     
     # 2. 新浪新闻
     print("📝 抓取新浪新闻...")
     try:
-        result = subprocess.run(
-            ['python3', 'news-crawler.py'],
-            cwd=os.path.dirname(__file__),
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            universal_newlines=True,
-            timeout=30
-        )
-        print("✅ 新浪新闻完成")
+        import sys
+        sys.path.insert(0, os.path.dirname(__file__))
+        from news_crawler import fetch_sina_news, save_to_database
+        sina_topics = fetch_sina_news()
+        if sina_topics:
+            save_to_database(sina_topics)
+            print(f"✅ 新浪新闻：{len(sina_topics)} 条")
+        else:
+            print("⚠️  新浪新闻：0 条")
     except Exception as e:
         print(f"⚠️  新浪新闻失败：{e}")
     
