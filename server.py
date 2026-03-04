@@ -125,7 +125,7 @@ def get_agents():
 def get_content():
     conn = get_db()
     cursor = conn.cursor()
-    cursor.execute("SELECT * FROM content ORDER BY created_at DESC LIMIT 20")
+    cursor.execute("SELECT * FROM content ORDER BY created_at DESC LIMIT 100")
     content = [dict(row) for row in cursor.fetchall()]
     conn.close()
     return {'content': content}
@@ -141,19 +141,8 @@ def get_monitor_data(platform='all'):
     conn.close()
     return {'stats': {'total': len(data)}, 'content': data}
 
-if __name__ == '__main__':
-    server = HTTPServer(('0.0.0.0', 8888), APIHandler)
-    print("🚀 Server started on port 8888")
-    server.serve_forever()
 
 
-def record_visit_final(page='dashboard'):
-    """记录访问"""
-    conn = get_db()
-    cursor = conn.cursor()
-    cursor.execute('INSERT INTO page_visits (page, user_agent, visited_at) VALUES (?, ?, ?)', (page, 'web', datetime.datetime.now()))
-    conn.commit()
-    conn.close()
 
 # ========== 访问统计函数 ==========
 def get_visit_count():
@@ -175,3 +164,9 @@ def record_visit(page='dashboard'):
     cursor.execute('INSERT INTO page_visits (page, user_agent, visited_at) VALUES (?, ?, ?)', (page, 'web', datetime.datetime.now()))
     conn.commit()
     conn.close()
+
+
+if __name__ == '__main__':
+    server = HTTPServer(('0.0.0.0', 8888), APIHandler)
+    print("🚀 Server started on port 8888")
+    server.serve_forever()
