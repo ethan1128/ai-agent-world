@@ -51,29 +51,8 @@ def fetch_weibo_hot_search():
     except Exception as e:
         print(f"⚠️  微博热搜抓取失败：{e}")
     
-    # fallback: 生成基于时间的不同热点
-    import random
-    import datetime
-    # 根据小时数选择不同的热点池
-    hour = datetime.datetime.now().hour
-    base_topics_pool = [
-        ['中年人的职场困境', '如何保持年轻心态', '退休后的生活规划', '夫妻相处之道', '子女教育问题'],
-        ['健康养生知识', '人际关系处理', '财务管理建议', '自我提升方法', '心理健康指南'],
-        ['职场沟通技巧', '家庭和谐相处', '个人成长规划', '情绪管理方法', '生活品质提升'],
-        ['中年健康管理', '退休理财规划', '夫妻关系维护', '子女教育方法', '个人兴趣培养'],
-    ]
-    # 根据小时数选择热点池，确保每 4 小时热点不同
-    base_topics = base_topics_pool[hour % len(base_topics_pool)]
-    # 打乱顺序
-    random.shuffle(base_topics)
-    selected = base_topics
-    hot_topics = [
-        {'title': topic, 'hot_value': random.randint(1000000, 5000000), 'platform': 'weibo'}
-        for topic in selected
-    ]
-    
-    print(f"✅ 生成 {len(hot_topics)} 条微博热搜")
-    return hot_topics
+    print(f"⚠️  微博热搜抓取失败，返回空数据")
+    return []
 
 def fetch_zhihu_hot():
     """抓取知乎热榜（公开 API）"""

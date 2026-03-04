@@ -125,7 +125,7 @@ def get_agents():
 def get_content():
     conn = get_db()
     cursor = conn.cursor()
-    cursor.execute("SELECT * FROM content ORDER BY created_at DESC LIMIT 100")
+    cursor.execute("SELECT * FROM content ORDER BY created_at DESC ")
     content = [dict(row) for row in cursor.fetchall()]
     conn.close()
     return {'content': content}
