@@ -65,7 +65,6 @@ def fetch_weibo_hot_search():
         '自我提升方法',
         '心理健康指南'
     ]
-    # 每次随机选择 5 个并打乱
     selected = random.sample(base_topics, 5)
     hot_topics = [
         {'title': topic, 'hot_value': random.randint(1000000, 5000000), 'platform': 'weibo'}
@@ -74,10 +73,6 @@ def fetch_weibo_hot_search():
     
     print(f"✅ 生成 {len(hot_topics)} 条微博热搜")
     return hot_topics
-        
-    except Exception as e:
-        print(f"❌ 微博热搜抓取失败：{e}")
-        return []
 
 def fetch_zhihu_hot():
     """抓取知乎热榜（公开 API）"""
