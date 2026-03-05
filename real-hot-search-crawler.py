@@ -18,40 +18,45 @@ def get_db():
     return conn
 
 def fetch_weibo_hot_search():
-    """抓取微博热搜 - 真实数据"""
+    """抓取微博热搜 - 使用 Cookie"""
     print("🔍 抓取微博热搜...")
     
+    # 加载 Cookie
     try:
-        # 微博热搜移动版页面（不需要 API 授权）
-        url = 'https://m.weibo.cn/api/container/getIndex?containerid=102803'
+        with open('cookies.json', 'r', encoding='utf-8') as f:
+            cookies_data = json.load(f)
+        weibo_cookie = cookies_data.get('weibo', '')
+    except:
+        weibo_cookie = ''
+    
+    try:
+        # 微博热搜 API
+        url = 'https://weibo.com/ajax/side/hotSearch'
         headers = {
-            'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 14_0 like Mac OS X)',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
             'Accept': 'application/json'
         }
+        if weibo_cookie:
+            headers['Cookie'] = weibo_cookie
         
         response = requests.get(url, headers=headers, timeout=30)
         data = response.json()
         
         hot_topics = []
-        cards = data.get('data', {}).get('cards', [])
-        for card in cards:
-            card_group = card.get('card_group', [])
-            for item in card_group:
-                if item.get('card_type') == 3:  # 热搜类型
-                    hot_topics.append({
-                        'title': item.get('desc', ''),
-                        'hot_value': item.get('desc_extr', 0),
-                        'platform': 'weibo'
-                    })
+        items = data.get('data', {}).get('realtime', [])
+        for item in items[:20]:
+            hot_topics.append({
+                'title': item.get('note', ''),
+                'hot_value': item.get('num', 0),
+                'platform': 'weibo'
+            })
         
         if hot_topics:
             print(f"✅ 抓取到 {len(hot_topics)} 条微博热搜")
-            return hot_topics[:10]
-        
+            return hot_topics
     except Exception as e:
         print(f"⚠️  微博热搜抓取失败：{e}")
     
-    print(f"⚠️  微博热搜抓取失败，返回空数据")
     return []
 
 def fetch_zhihu_hot():
@@ -253,6 +258,52 @@ def fetch_baidu_hot():
         print(f"⚠️  百度热搜抓取失败：{e}")
     return []
 
+
+def send_to_dingtalk(platform_stats, latest_topics):
+    """发送热点到钉钉"""
+    import subprocess
+    from datetime import datetime
+    
+    # 生成消息
+    message = f"# 🔥 全网热点汇总（{datetime.now().strftime('%m-%d %H:%M')}）\n\n"
+    message += "**数据来源**：多平台实时监控\n"
+    message += "**更新时间**：" + datetime.now().strftime('%Y-%m-%d %H:%M:%S') + "\n\n"
+    
+    # 各平台数据量
+    message += "## 📊 各平台数据量\n\n"
+    message += "| 平台 | 数据量 | 最后更新 |\n"
+    message += "|------|--------|---------|\n"
+    for platform, count, latest in platform_stats:
+        platform_names = {'baidu': '百度热搜', 'weibo': '微博热搜', 'zhihu': '知乎', 
+                         'douyin': '抖音', 'kuaishou': '快手', 'xiaohongshu': '小红书', 
+                         'videonumber': '视频号'}
+        message += f"| {platform_names.get(platform, platform)} | {count} 条 | {latest[:16]} |\n"
+    
+    message += "\n---\n\n"
+    
+    # 最新热点 TOP20
+    message += "## 🔥 最新热点 TOP20\n\n"
+    for i, (platform, title, _) in enumerate(latest_topics[:20], 1):
+        platform_names = {'baidu': '百度', 'weibo': '微博', 'zhihu': '知乎', 
+                         'douyin': '抖音', 'kuaishou': '快手', 'xiaohongshu': '小红书', 
+                         'videonumber': '视频号'}
+        message += f"{i}. **{title[:30]}** ({platform_names.get(platform, platform)})\n"
+    
+    message += "\n---\n\n"
+    message += "**🦞 数据持续更新中，每 10 分钟自动抓取**"
+    
+    # 发送钉钉消息
+    try:
+        subprocess.run([
+            'openclaw', 'message', 'send',
+            '--target', '035327583959855978',
+            '--channel', 'dingtalk',
+            '--message', message
+        ], stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, timeout=30)
+        print("✅ 钉钉消息已发送")
+    except Exception as e:
+        print(f"⚠️  钉钉消息发送失败：{e}")
+
 if __name__ == '__main__':
     print("=" * 60)
     print("🔍 真实热点爬虫 - 多数据源")
@@ -281,6 +332,29 @@ if __name__ == '__main__':
     
     # 保存
     saved = save_to_database(all_topics)
+    
+    # 获取平台统计和最新热点
+    conn = get_db()
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT platform, COUNT(*) as count, MAX(crawl_time) as latest 
+        FROM platform_monitor 
+        GROUP BY platform 
+        ORDER BY count DESC
+    """)
+    platform_stats = cursor.fetchall()
+    
+    cursor.execute("""
+        SELECT platform, title, crawl_time 
+        FROM platform_monitor 
+        ORDER BY crawl_time DESC 
+        LIMIT 20
+    """)
+    latest_topics = cursor.fetchall()
+    conn.close()
+    
+    # 发送钉钉消息
+    send_to_dingtalk(platform_stats, latest_topics)
     
     print("\n" + "=" * 60)
     print(f"✅ 完成：抓取 {len(all_topics)} 条，保存 {saved} 条")
