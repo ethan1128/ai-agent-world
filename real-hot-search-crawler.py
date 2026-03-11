@@ -232,17 +232,30 @@ def fetch_baidu_hot():
         
         import re
         hot_topics = []
-        pattern = r'"word":"([^"]+)"'
+        
+        # 提取标题和热度值
+        # 百度热搜格式：{"word":"标题","hot":"热度值"}
+        pattern = r'"word":"([^"]+)".*?"hot":"?([^",}]+)"?'
         matches = re.findall(pattern, response.text)
         
-        for i, word in enumerate(matches[:20], 1):
+        for i, (word, hot) in enumerate(matches[:20], 1):
+            # 解析热度值（如 "123万" -> 1230000）
+            hot_value = 0
+            try:
+                if '万' in hot:
+                    hot_value = int(float(hot.replace('万', '')) * 10000)
+                elif hot.isdigit():
+                    hot_value = int(hot)
+            except:
+                hot_value = 0
+            
             hot_topics.append({
                 'platform': 'baidu',
                 'title': word,
                 'rank': i,
-                'hot_value': 0,
+                'hot_value': hot_value,
                 'author': '百度热搜',
-                'views': 0,
+                'views': hot_value,  # 使用热度值作为 views
                 'likes': 0,
                 'comments': 0,
                 'content_url': f'https://www.baidu.com/s?wd={word}',

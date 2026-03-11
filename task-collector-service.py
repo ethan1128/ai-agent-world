@@ -246,6 +246,15 @@ def run_collection():
     for t in time_tasks:
         print(f"   ✅ 时间：{t['title']}")
     
+    # 6. 热点任务（内容创作）
+    hotspot_tasks = collect_hotspot_tasks()
+    created_tasks = []
+    for t in hotspot_tasks:
+        task_id = create_task_from_hotspot(t)
+        if task_id:
+            created_tasks.append({**t, 'task_id': task_id})
+            print(f"   ✅ 热点：{t['title']} {t['priority_text']}")
+    
     # 去重
     last_tasks = load_last_tasks()
     unique_tasks = []
@@ -255,20 +264,30 @@ def run_collection():
             unique_tasks.append(t)
     
     # 记录交互
-    if unique_tasks:
-        message = f"✅ 收集完成\n\n发现 {len(unique_tasks)} 个新任务：\n\n"
-        for i, t in enumerate(unique_tasks[:10], 1):
-            message += f"{i}. {t['title']} ({t['source']})\n"
-            message += f"   {t['description'][:100]}\n\n"
+    total_new = len(unique_tasks) + len(created_tasks)
+    if total_new > 0:
+        message = f"✅ 收集完成\n\n发现 {total_new} 个新任务：\n\n"
         
-        if len(unique_tasks) > 10:
-            message += f"... 还有{len(unique_tasks)-10}个任务\n"
+        # 系统任务
+        for i, t in enumerate(unique_tasks[:5], 1):
+            message += f"{i}. {t['title']} ({t['source']})\n"
+        
+        # 热点创作任务
+        if created_tasks:
+            message += f"\n📱 内容创作任务（{len(created_tasks)}个）：\n"
+            for i, t in enumerate(created_tasks[:5], 1):
+                message += f"{i}. {t['title']} {t['priority_text']}\n"
+                message += f"   来源：{t['source']} | 热度：{t['hotspot_views']:,}\n"
+        
+        if len(unique_tasks) > 5 or len(created_tasks) > 5:
+            message += f"\n... 还有更多任务\n"
         
         log_interaction(SESSION_KEY, 'agent:main', message, 'task_report')
-        print(f"   📊 本轮发现：{len(unique_tasks)} 个新任务")
+        print(f"   📊 本轮发现：{len(unique_tasks)} 个系统任务 + {len(created_tasks)} 个创作任务")
         
         # 保存任务 key 用于去重
-        save_last_tasks([f"{t['source']}:{t['title']}" for t in unique_tasks])
+        all_tasks = unique_tasks + [{'source': t['source'], 'title': t['title']} for t in created_tasks]
+        save_last_tasks([f"{t['source']}:{t['title']}" for t in all_tasks])
     else:
         print(f"   ⏸️ 本轮无新任务")
     
@@ -307,3 +326,98 @@ if __name__ == '__main__':
             print(f"   ❌ 错误：{e}")
             import time
             time.sleep(60)
+
+def collect_hotspot_tasks():
+    """从热点数据生成内容创作任务"""
+    tasks = []
+    conn = get_db()
+    cursor = conn.cursor()
+    
+    # 获取过去 2 小时的高热度话题
+    cursor.execute('''
+        SELECT platform, title, views, likes, comments, crawl_time
+        FROM platform_monitor
+        WHERE crawl_time >= datetime('now', '-2 hours')
+        ORDER BY 
+            CASE 
+                WHEN views > 0 THEN views
+                WHEN likes > 0 THEN likes * 10
+                ELSE comments * 100
+            END DESC
+        LIMIT 10
+    ''')
+    
+    hotspots = cursor.fetchall()
+    conn.close()
+    
+    platform_names = {
+        'baidu': '百度热搜',
+        'weibo': '微博热搜',
+        'zhihu': '知乎热榜',
+        'douyin': '抖音热点',
+        'kuaishou': '快手热点',
+        'xiaohongshu': '小红书'
+    }
+    
+    for hotspot in hotspots:
+        platform = hotspot['platform']
+        title = hotspot['title']
+        views = hotspot['views'] or 0
+        
+        # 计算优先级
+        if views > 1000000:
+            priority = 1  # 高热
+            priority_text = "🔥 高热"
+        elif views > 100000:
+            priority = 2  # 中热
+            priority_text = "📈 中热"
+        else:
+            priority = 3  # 低热
+            priority_text = "📊 普通"
+        
+        # 生成任务
+        task = {
+            'title': f'撰写关于"{title[:30]}"的文章',
+            'source': platform_names.get(platform, platform),
+            'description': f'热点来源：{platform_names.get(platform, platform)}\n标题：{title}\n热度：{views:,} 浏览\n抓取时间：{hotspot["crawl_time"][:16]}',
+            'priority': priority,
+            'priority_text': priority_text,
+            'hotspot_title': title,
+            'hotspot_platform': platform,
+            'hotspot_views': views
+        }
+        tasks.append(task)
+    
+    return tasks
+
+def create_task_from_hotspot(hotspot_task):
+    """将热点任务写入数据库"""
+    conn = get_db()
+    cursor = conn.cursor()
+    
+    # 检查是否已存在相同任务（24小时内）
+    cursor.execute('''
+        SELECT COUNT(*) as count FROM tasks
+        WHERE title LIKE ? AND created_at >= datetime('now', '-24 hours')
+    ''', (f'%{hotspot_task["hotspot_title"][:20]}%',))
+    
+    if cursor.fetchone()['count'] > 0:
+        conn.close()
+        return None  # 已存在，跳过
+    
+    # 创建任务
+    cursor.execute('''
+        INSERT INTO tasks (title, description, status, priority, created_by, created_at, updated_at)
+        VALUES (?, ?, 'pending', ?, ?, datetime('now'), datetime('now'))
+    ''', (
+        hotspot_task['title'],
+        hotspot_task['description'],
+        hotspot_task['priority'],
+        SESSION_KEY
+    ))
+    
+    task_id = cursor.lastrowid
+    conn.commit()
+    conn.close()
+    
+    return task_id
