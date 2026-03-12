@@ -233,10 +233,20 @@ def fetch_baidu_hot():
         import re
         hot_topics = []
         
-        # 提取标题和热度值
-        # 百度热搜格式：{"word":"标题","hot":"热度值"}
-        pattern = r'"word":"([^"]+)".*?"hot":"?([^",}]+)"?'
-        matches = re.findall(pattern, response.text)
+        # 提取标题（简化版）
+        # 百度热搜格式：word":"标题"
+        pattern = r'word":"([^"]+)"'
+        words = re.findall(pattern, response.text)
+        
+        # 去重并限制数量
+        seen = set()
+        matches = []
+        for w in words:
+            if w not in seen and len(w) > 5:
+                seen.add(w)
+                matches.append((w, '0'))
+            if len(matches) >= 20:
+                break
         
         for i, (word, hot) in enumerate(matches[:20], 1):
             # 解析热度值（如 "123万" -> 1230000）
