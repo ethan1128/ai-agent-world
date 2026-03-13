@@ -56,20 +56,12 @@ def get_hot_topics():
     
     hot_topics = []
     
-    # 从不同平台获取热点
-    cursor.execute('SELECT title, views, platform FROM platform_monitor WHERE platform="web" ORDER BY views DESC LIMIT 5')
+    # 从实际有的平台获取热点（baidu, weibo）
+    cursor.execute('SELECT title, views, platform FROM platform_monitor WHERE platform="baidu" ORDER BY crawl_time DESC LIMIT 10')
     hot_topics.extend([dict(row) for row in cursor.fetchall()])
     
-    cursor.execute('SELECT title, views, platform FROM platform_monitor WHERE platform="zhihu" ORDER BY views DESC LIMIT 3')
+    cursor.execute('SELECT title, views, platform FROM platform_monitor WHERE platform="weibo" ORDER BY crawl_time DESC LIMIT 5')
     hot_topics.extend([dict(row) for row in cursor.fetchall()])
-    
-    cursor.execute('SELECT title, views, platform FROM platform_monitor WHERE platform="douyin" ORDER BY views DESC LIMIT 3')
-    hot_topics.extend([dict(row) for row in cursor.fetchall()])
-    
-    cursor.execute('SELECT title, views, platform FROM platform_monitor WHERE platform="kuaishou" ORDER BY views DESC LIMIT 3')
-    hot_topics.extend([dict(row) for row in cursor.fetchall()])
-    
-    cursor.execute('SELECT title, views, platform FROM platform_monitor WHERE platform="xiaohongshu" ORDER BY views DESC LIMIT 3')
     hot_topics.extend([dict(row) for row in cursor.fetchall()])
     
     conn.close()
@@ -93,7 +85,7 @@ def task_collector_work():
     
     content = "【热点收集报告】\n\n"
     for i, topic in enumerate(hot_topics, 1):
-        platform_names = {'web': '微博', 'zhihu': '知乎', 'douyin': '抖音', 'kuaishou': '快手', 'xiaohongshu': '小红书'}
+        platform_names = {'baidu': '百度', 'weibo': '微博'}
         platform_name = platform_names.get(topic['platform'], topic['platform'])
         content += f"{i}. {topic['title']} ({platform_name} 👁️ {topic['views']})\n"
     
