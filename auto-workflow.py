@@ -62,7 +62,6 @@ def get_hot_topics():
     
     cursor.execute('SELECT title, views, platform FROM platform_monitor WHERE platform="weibo" ORDER BY crawl_time DESC LIMIT 5')
     hot_topics.extend([dict(row) for row in cursor.fetchall()])
-    hot_topics.extend([dict(row) for row in cursor.fetchall()])
     
     conn.close()
     
