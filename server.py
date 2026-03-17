@@ -4,6 +4,7 @@
 import sqlite3
 import json
 from http.server import HTTPServer, SimpleHTTPRequestHandler
+from socketserver import ThreadingMixIn
 from urllib.parse import urlparse, parse_qs
 import os
 from datetime import datetime
@@ -167,6 +168,9 @@ def record_visit(page='dashboard'):
 
 
 if __name__ == '__main__':
-    server = HTTPServer(('0.0.0.0', 8888), APIHandler)
+    class ThreadedHTTPServer(ThreadingMixIn, HTTPServer):
+        pass
+    
+    server = ThreadedHTTPServer(('0.0.0.0', 8888), APIHandler)
     print("🚀 Server started on port 8888")
     server.serve_forever()
